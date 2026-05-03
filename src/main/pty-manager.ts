@@ -21,10 +21,15 @@ const PTY_ENV_ALLOWLIST = [
   'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_RUNTIME_DIR',
   'SSH_AUTH_SOCK', 'DISPLAY', 'COLORTERM',
   // macOS specific
-  '__CF_USER_TEXT_ENCODING', 'COMMAND_MODE',
+  '__CF_USER_TEXT_ENCODING', 'COMMAND_MODE', 'TERM_SESSION_ID',
   // Common dev tools that need env to locate configs
   'NVM_DIR', 'VOLTA_HOME', 'RUSTUP_HOME', 'CARGO_HOME', 'GOPATH', 'GOROOT',
   'PYENV_ROOT', 'RBENV_ROOT', 'FNM_DIR',
+  // Conda/Anaconda
+  'CONDA_DEFAULT_ENV', 'CONDA_PREFIX', 'CONDA_EXE', 'CONDA_PYTHON_EXE',
+  'CONDA_SHLVL', '_CE_CONDA', '_CE_M',
+  // Homebrew
+  'HOMEBREW_PREFIX', 'HOMEBREW_CELLAR', 'HOMEBREW_REPOSITORY',
 ];
 
 function buildPtyEnv(): Record<string, string> {

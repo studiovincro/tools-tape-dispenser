@@ -27,7 +27,7 @@ const statusLabels: Record<SessionInfo['status'], string> = {
 };
 
 export function SplitLayout() {
-  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId } = useSessionState();
+  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId, sessionFilter } = useSessionState();
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
@@ -115,7 +115,9 @@ export function SplitLayout() {
             borderRadius: 8,
           }}
         >
-          No active sessions
+          {sessionFilter === 'claude' ? 'No active Claude sessions'
+            : sessionFilter === 'terminal' ? 'No active Terminal sessions'
+            : 'No active sessions'}
         </span>
       </div>
     );
