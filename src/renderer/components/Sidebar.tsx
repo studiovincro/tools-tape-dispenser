@@ -34,6 +34,38 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
   const searchInputRef = useRef<HTMLInputElement>(null);
   const lastShiftTime = useRef(0);
 
+  // Auto-select first matching session or project as user types
+  useEffect(() => {
+    if (!searchQuery) return;
+    const query = searchQuery.toLowerCase();
+    // First try matching a session in the active project
+    const activeSessions = getProjectSessions(state, activeProjectId);
+    const sessionMatch = activeSessions.find((s) => s.label.toLowerCase().includes(query));
+    if (sessionMatch) {
+      dispatch({ type: 'SET_ACTIVE', id: sessionMatch.id });
+      return;
+    }
+    // Then try matching a session in any project
+    for (const project of projects) {
+      const sessions = getProjectSessions(state, project.id);
+      const match = sessions.find((s) => s.label.toLowerCase().includes(query));
+      if (match) {
+        dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id });
+        dispatch({ type: 'SET_ACTIVE', id: match.id });
+        return;
+      }
+    }
+    // Finally try matching a project name — select it and show its first session
+    const projectMatch = projects.find((p) => p.name.toLowerCase().includes(query));
+    if (projectMatch) {
+      dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: projectMatch.id });
+      const sessions = getProjectSessions(state, projectMatch.id);
+      if (sessions.length > 0) {
+        dispatch({ type: 'SET_ACTIVE', id: sessions[0].id });
+      }
+    }
+  }, [searchQuery]);
+
   // Double-shift to open search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
