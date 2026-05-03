@@ -26,9 +26,10 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
   const [terminalFontSize, setTerminalFontSize] = useState(settings.terminalFontSize);
   const [defaultSessionType, setDefaultSessionType] = useState(settings.defaultSessionType);
   const [defaultProjectDir, setDefaultProjectDir] = useState(settings.defaultProjectDir);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState(settings.subscriptionEndDate);
 
   const handleSave = () => {
-    onSave({ minPaneWidth, terminalFontSize, defaultSessionType, defaultProjectDir });
+    onSave({ minPaneWidth, terminalFontSize, defaultSessionType, defaultProjectDir, subscriptionEndDate });
     onClose();
   };
 
@@ -197,6 +198,19 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
               )}
             </div>
           </div>
+
+          {/* Subscription end date */}
+          <SettingsRow label="Subscription end date" desc="Track when your subscription renews">
+            <input
+              type="date"
+              value={subscriptionEndDate}
+              onChange={(e) => setSubscriptionEndDate(e.target.value)}
+              style={{
+                ...inputStyle,
+                width: 150,
+              }}
+            />
+          </SettingsRow>
         </div>
 
         {/* Footer buttons */}

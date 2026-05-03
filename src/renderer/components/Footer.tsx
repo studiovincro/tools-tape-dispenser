@@ -77,8 +77,9 @@ export function Footer({ onCycleLayout }: FooterProps) {
         color: theme.tabInactiveText,
       }}
     >
-      {/* Left: timer + capacity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* Left: subscription + timer + capacity */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <SubscriptionPill endDate={settings.subscriptionEndDate} />
         <SessionTimer />
         <SessionCapacity sessions={state.sessions} />
       </div>
@@ -339,5 +340,46 @@ function TimerMenuItem({ label, onClick, danger }: { label: string; onClick: () 
     >
       {label}
     </div>
+  );
+}
+
+function SubscriptionPill({ endDate }: { endDate: string }) {
+  if (!endDate) return null;
+
+  const end = new Date(endDate + 'T23:59:59');
+  const now = new Date();
+  const diffMs = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) {
+    return (
+      <span style={{
+        background: '#e5484d',
+        color: '#fff',
+        fontSize: 12,
+        fontFamily: 'system-ui',
+        fontWeight: 500,
+        padding: '4px 10px',
+        borderRadius: 5,
+      }}>
+        Expired
+      </span>
+    );
+  }
+
+  const bg = diffDays <= 3 ? '#e5484d' : diffDays <= 7 ? '#e5a100' : '#30a46c';
+
+  return (
+    <span style={{
+      background: bg,
+      color: '#fff',
+      fontSize: 12,
+      fontFamily: 'system-ui',
+      fontWeight: 500,
+      padding: '4px 10px',
+      borderRadius: 5,
+    }}>
+      {diffDays}d left
+    </span>
   );
 }

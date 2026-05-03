@@ -32,6 +32,7 @@ export interface Settings {
   terminalFontSize: number;
   defaultSessionType: SessionType;
   defaultProjectDir: string;
+  subscriptionEndDate: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -39,6 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   terminalFontSize: 13,
   defaultSessionType: 'claude',
   defaultProjectDir: '',
+  subscriptionEndDate: '',
 };
 
 export interface AppState {
