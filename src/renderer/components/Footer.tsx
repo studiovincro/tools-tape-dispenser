@@ -77,6 +77,11 @@ export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <FilterToggle
           value={sessionFilter}
+          counts={{
+            all: projectSessions.length,
+            claude: projectSessions.filter((s) => s.sessionType === 'claude').length,
+            terminal: projectSessions.filter((s) => s.sessionType === 'terminal').length,
+          }}
           onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })}
         />
         <button
@@ -230,7 +235,7 @@ const filterOptions: { value: SessionFilter; label: string }[] = [
   { value: 'terminal', label: 'Terminal' },
 ];
 
-function FilterToggle({ value, onChange }: { value: SessionFilter; onChange: (f: SessionFilter) => void }) {
+function FilterToggle({ value, counts, onChange }: { value: SessionFilter; counts: Record<SessionFilter, number>; onChange: (f: SessionFilter) => void }) {
   return (
     <div
       style={{
@@ -242,27 +247,35 @@ function FilterToggle({ value, onChange }: { value: SessionFilter; onChange: (f:
         gap: 1,
       }}
     >
-      {filterOptions.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          style={{
-            background: value === opt.value ? theme.tabActiveBackground : 'transparent',
-            border: 'none',
-            borderRadius: 4,
-            padding: '2px 8px',
-            fontSize: 12,
-            fontFamily: 'system-ui',
-            color: value === opt.value ? theme.tabActiveText : theme.tabInactiveText,
-            fontWeight: value === opt.value ? 500 : 400,
-            cursor: 'pointer',
-            boxShadow: value === opt.value ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-            transition: 'background 0.12s, color 0.12s',
-          }}
-        >
-          {opt.label}
-        </button>
-      ))}
+      {filterOptions.map((opt) => {
+        const count = counts[opt.value];
+        const isActive = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            style={{
+              background: isActive ? theme.tabActiveBackground : 'transparent',
+              border: 'none',
+              borderRadius: 4,
+              padding: '2px 8px',
+              fontSize: 12,
+              fontFamily: 'system-ui',
+              color: isActive ? theme.tabActiveText : theme.tabInactiveText,
+              fontWeight: isActive ? 500 : 400,
+              cursor: 'pointer',
+              boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+              transition: 'background 0.12s, color 0.12s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            {opt.label}
+            <span style={{ opacity: 0.6 }}>{count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

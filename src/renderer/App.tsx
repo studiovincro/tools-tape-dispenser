@@ -279,7 +279,7 @@ function AppInner() {
           onDeleteProject={deleteProject}
         />
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <SplitLayout onCloseSession={closeSession} />
+          <SplitLayout />
         </div>
       </div>
       {/* Footer — full width below everything */}

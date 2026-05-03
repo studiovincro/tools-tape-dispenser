@@ -19,6 +19,7 @@ type Action =
   | { type: 'SET_LAYOUT'; mode: LayoutMode }
   | { type: 'SET_VISIBLE'; ids: string[] }
   | { type: 'SET_VISIBLE_SLOT'; index: number; sessionId: string }
+  | { type: 'REMOVE_FROM_STAGE'; id: string }
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
   | { type: 'RESTORE'; state: AppState }
@@ -189,7 +190,9 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_SESSION_FILTER': {
       const newState = { ...state, sessionFilter: action.filter };
       const filtered = getFilteredProjectSessions(newState);
-      const layoutMode = clampLayout(state.layoutMode, filtered.length);
+      // Show all matching sessions, up to 8
+      const desiredPanes = Math.min(filtered.length, 8);
+      const layoutMode = String(Math.max(desiredPanes, 1)) as LayoutMode;
       const activeSessionId = filtered.length > 0 ? filtered[0].id : null;
       return {
         ...newState,
@@ -264,6 +267,15 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'SET_VISIBLE': {
       return { ...state, visibleSessionIds: action.ids };
+    }
+    case 'REMOVE_FROM_STAGE': {
+      const visible = state.visibleSessionIds.filter((id) => id !== action.id);
+      const layoutMode = String(Math.max(visible.length, 1)) as LayoutMode;
+      let activeSessionId = state.activeSessionId;
+      if (activeSessionId === action.id) {
+        activeSessionId = visible.length > 0 ? visible[0] : null;
+      }
+      return { ...state, visibleSessionIds: visible, layoutMode, activeSessionId };
     }
     case 'SET_VISIBLE_SLOT': {
       const visible = [...state.visibleSessionIds];

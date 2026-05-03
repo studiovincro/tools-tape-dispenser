@@ -25,11 +25,7 @@ const statusLabels: Record<SessionInfo['status'], string> = {
   exited: 'Exited',
 };
 
-interface SplitLayoutProps {
-  onCloseSession: (id: string) => void;
-}
-
-export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
+export function SplitLayout() {
   const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId } = useSessionState();
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
@@ -111,7 +107,7 @@ export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
                   projectName={projects.find((p) => p.id === session.projectId)?.name ?? ''}
                   color={isMultiPane ? paneColor : theme.tabInactiveText}
                   showClose={isMultiPane}
-                  onClose={() => onCloseSession(id)}
+                  onClose={() => dispatch({ type: 'REMOVE_FROM_STAGE', id })}
                   onDoubleClick={() => focusPane(id)}
                 />
               )}
