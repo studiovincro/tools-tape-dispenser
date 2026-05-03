@@ -228,6 +228,20 @@ function AppInner() {
           if (persisted.settings) {
             dispatch({ type: 'SET_SETTINGS', settings: { ...DEFAULT_SETTINGS, ...persisted.settings } });
           }
+          // Restore per-project layouts (convert indices back to session IDs)
+          if (persisted.projectLayouts && typeof persisted.projectLayouts === 'object') {
+            const layouts: Record<string, { visibleSessionIds: string[]; layoutMode: LayoutMode; activeSessionId: string | null }> = {};
+            for (const [pid, layout] of Object.entries(persisted.projectLayouts as Record<string, any>)) {
+              if (layout && Array.isArray(layout.visibleSessionIndices)) {
+                layouts[pid] = {
+                  visibleSessionIds: layout.visibleSessionIndices.map((i: number) => createdIds[i]).filter(Boolean),
+                  layoutMode: /^[1-8]$/.test(layout.layoutMode) ? layout.layoutMode as LayoutMode : '1',
+                  activeSessionId: layout.activeSessionIndex != null ? createdIds[layout.activeSessionIndex] ?? null : null,
+                };
+              }
+            }
+            dispatch({ type: 'RESTORE_LAYOUTS', projectLayouts: layouts });
+          }
         } else if (persisted.sessions && persisted.sessions.length > 0) {
           for (const { cwd } of persisted.sessions) {
             const result = await window.electronAPI.createSession(cwd);
@@ -256,6 +270,24 @@ function AppInner() {
   // Save state on beforeunload
   useEffect(() => {
     const handler = () => {
+      // Merge current project's layout into projectLayouts before saving
+      const allLayouts = {
+        ...state.projectLayouts,
+        [state.activeProjectId]: {
+          visibleSessionIds: state.visibleSessionIds,
+          layoutMode: state.layoutMode,
+          activeSessionId: state.activeSessionId,
+        },
+      };
+      // Convert session IDs to indices for persistence
+      const persistedLayouts: Record<string, { visibleSessionIndices: number[]; layoutMode: string; activeSessionIndex: number | null }> = {};
+      for (const [pid, layout] of Object.entries(allLayouts)) {
+        persistedLayouts[pid] = {
+          visibleSessionIndices: layout.visibleSessionIds.map((id) => state.sessions.findIndex((s) => s.id === id)).filter((i) => i !== -1),
+          layoutMode: layout.layoutMode,
+          activeSessionIndex: layout.activeSessionId ? state.sessions.findIndex((s) => s.id === layout.activeSessionId) : null,
+        };
+      }
       window.electronAPI.saveState({
         projects: state.projects,
         activeProjectId: state.activeProjectId,
@@ -265,7 +297,7 @@ function AppInner() {
         sidebarWidth: state.sidebarWidth,
         sessionFilter: state.sessionFilter,
         settings: state.settings,
-        // Save visible pane order as session indices within the full session list
+        projectLayouts: persistedLayouts,
         visibleSessionIndices: state.visibleSessionIds.map((id) => state.sessions.findIndex((s) => s.id === id)).filter((i) => i !== -1),
       });
     };

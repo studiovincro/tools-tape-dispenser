@@ -9,7 +9,8 @@ interface SaveStatePayload {
   sidebarWidth?: number;
   sessionFilter?: string;
   visibleSessionIndices?: number[];
-  settings?: { minPaneWidth: number; terminalFontSize: number; defaultSessionType: string; defaultProjectDir: string };
+  settings?: { minPaneWidth: number; terminalFontSize: number; defaultSessionType: string; defaultProjectDir: string; subscriptionEndDate: string };
+  projectLayouts?: Record<string, { visibleSessionIndices: number[]; layoutMode: string; activeSessionIndex: number | null }>;
 }
 
 interface LoadStateResult {
@@ -21,7 +22,8 @@ interface LoadStateResult {
   sidebarWidth?: number;
   sessionFilter?: string;
   visibleSessionIndices?: number[];
-  settings?: { minPaneWidth: number; terminalFontSize: number; defaultSessionType: string; defaultProjectDir: string };
+  settings?: { minPaneWidth: number; terminalFontSize: number; defaultSessionType: string; defaultProjectDir: string; subscriptionEndDate: string };
+  projectLayouts?: Record<string, { visibleSessionIndices: number[]; layoutMode: string; activeSessionIndex: number | null }>;
   windowBounds: { x: number; y: number; width: number; height: number } | null;
 }
 

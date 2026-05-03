@@ -25,7 +25,8 @@ type Action =
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
   | { type: 'RESTORE'; state: AppState }
   | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null }
-  | { type: 'SET_SETTINGS'; settings: Partial<Settings> };
+  | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
+  | { type: 'RESTORE_LAYOUTS'; projectLayouts: Record<string, { visibleSessionIds: string[]; layoutMode: LayoutMode; activeSessionId: string | null }> };
 
 const initialState: AppState = {
   projects: [{ id: DEFAULT_PROJECT_ID, name: 'General' }],
@@ -38,6 +39,7 @@ const initialState: AppState = {
   sidebarWidth: 240,
   sessionFilter: 'all',
   settings: DEFAULT_SETTINGS,
+  projectLayouts: {},
 };
 
 // Helper: get sessions for a specific project
@@ -176,8 +178,38 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
     case 'SET_ACTIVE_PROJECT': {
-      const newState = { ...state, activeProjectId: action.projectId };
+      // Save current project's layout before switching
+      const savedLayouts = {
+        ...state.projectLayouts,
+        [state.activeProjectId]: {
+          visibleSessionIds: state.visibleSessionIds,
+          layoutMode: state.layoutMode,
+          activeSessionId: state.activeSessionId,
+        },
+      };
+      const newState = { ...state, activeProjectId: action.projectId, projectLayouts: savedLayouts };
       const projectSessions = getProjectSessions(newState);
+
+      // Restore saved layout for incoming project if available
+      const saved = savedLayouts[action.projectId];
+      if (saved) {
+        // Filter out any session IDs that no longer exist in this project
+        const validVisible = saved.visibleSessionIds.filter((id) => projectSessions.some((s) => s.id === id));
+        const layoutMode = validVisible.length > 0
+          ? clampLayout(saved.layoutMode, projectSessions.length)
+          : clampLayout('1', projectSessions.length);
+        const activeSessionId = saved.activeSessionId && projectSessions.some((s) => s.id === saved.activeSessionId)
+          ? saved.activeSessionId
+          : validVisible.length > 0 ? validVisible[0] : projectSessions.length > 0 ? projectSessions[0].id : null;
+        return {
+          ...newState,
+          layoutMode,
+          activeSessionId,
+          visibleSessionIds: validVisible.length > 0 ? validVisible : rebuildVisible({ ...newState, activeSessionId }, layoutMode),
+        };
+      }
+
+      // No saved layout — rebuild from scratch
       const layoutMode = clampLayout(state.layoutMode, projectSessions.length);
       const activeSessionId = projectSessions.length > 0 ? projectSessions[0].id : null;
       return {
@@ -321,6 +353,9 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'SET_SETTINGS': {
       return { ...state, settings: { ...state.settings, ...action.settings } };
+    }
+    case 'RESTORE_LAYOUTS': {
+      return { ...state, projectLayouts: action.projectLayouts };
     }
     default:
       return state;

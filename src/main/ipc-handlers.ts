@@ -76,6 +76,8 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
             subscriptionEndDate: typeof (payload.settings as any).subscriptionEndDate === 'string' ? (payload.settings as any).subscriptionEndDate : '',
           }
         : undefined,
+      projectLayouts: payload.projectLayouts && typeof payload.projectLayouts === 'object'
+        ? payload.projectLayouts : undefined,
       windowBounds: bounds,
     } as any);
   });

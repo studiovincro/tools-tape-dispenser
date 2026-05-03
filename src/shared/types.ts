@@ -54,4 +54,5 @@ export interface AppState {
   sidebarWidth: number;
   sessionFilter: SessionFilter;
   settings: Settings;
+  projectLayouts: Record<string, { visibleSessionIds: string[]; layoutMode: LayoutMode; activeSessionId: string | null }>;
 }
