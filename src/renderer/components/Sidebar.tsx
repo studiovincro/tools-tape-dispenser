@@ -34,6 +34,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [expandSignal, setExpandSignal] = useState<{ expanded: boolean; ts: number } | null>(null);
+  const setAllExpanded = (expanded: boolean) => setExpandSignal({ expanded, ts: Date.now() });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const lastShiftTime = useRef(0);
 
@@ -239,8 +241,20 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           )}
         </div>
 
-        {/* New Session bar with dropdown */}
-        <NewSessionBar onAddSession={onAddSession} />
+        {/* Collapse/Expand all */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 12px',
+            borderBottom: `1px solid ${theme.borderSubtle}`,
+            flexShrink: 0,
+          }}
+        >
+          <SidebarPill onClick={() => setAllExpanded(true)} label="Expand all" />
+          <SidebarPill onClick={() => setAllExpanded(false)} label="Collapse all" />
+        </div>
 
         {/* Project tree */}
         <div style={{ flex: 1, overflow: 'auto', padding: 0 }}>
@@ -275,6 +289,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                 editingSessionId={editingSessionId}
                 onEditingDone={() => { setEditingProjectId(null); setEditingSessionId(null); }}
                 canDelete={projects.length > 1}
+                expandSignal={expandSignal}
               />
             );
           })}
@@ -376,6 +391,7 @@ function ProjectTree({
   editingSessionId,
   onEditingDone,
   canDelete,
+  expandSignal,
 }: {
   project: { id: string; name: string };
   sessions: SessionInfo[];
@@ -394,9 +410,15 @@ function ProjectTree({
   editingSessionId: string | null;
   onEditingDone: () => void;
   canDelete: boolean;
+  expandSignal: { expanded: boolean; ts: number } | null;
 }) {
   const dispatch = useSessionDispatch();
   const [expanded, setExpanded] = useState(true);
+
+  // Respond to expand/collapse all signal
+  useEffect(() => {
+    if (expandSignal) setExpanded(expandSignal.expanded);
+  }, [expandSignal]);
   const [editing, setEditing] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [dragOver, setDragOver] = useState(false);
