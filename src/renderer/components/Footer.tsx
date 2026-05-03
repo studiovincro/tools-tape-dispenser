@@ -77,9 +77,10 @@ export function Footer({ onCycleLayout }: FooterProps) {
         color: theme.tabInactiveText,
       }}
     >
-      {/* Left: session counts + capacity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <SessionStats sessions={state.sessions} />
+      {/* Left: timer + capacity */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <SessionTimer />
+        <SessionCapacity sessions={state.sessions} />
       </div>
 
       {/* Right: filter + layout toggle */}
@@ -122,102 +123,19 @@ export function Footer({ onCycleLayout }: FooterProps) {
 }
 
 
-const divider = (key: string) => (
-  <span
-    key={key}
-    style={{
-      color: theme.tabInactiveText,
-      flexShrink: 0,
-      userSelect: 'none',
-    }}
-  >
-    -
-  </span>
-);
-
-function SessionStats({ sessions }: { sessions: SessionInfo[] }) {
+function SessionCapacity({ sessions }: { sessions: SessionInfo[] }) {
   const claudeSessions = sessions.filter((s) => s.sessionType === 'claude');
-  const terminalSessions = sessions.filter((s) => s.sessionType === 'terminal');
-
-  // Find the max context usage across all Claude sessions
   const contextPercents = claudeSessions
     .map((s) => s.contextPercent)
     .filter((p): p is number => p !== null);
   const maxContext = contextPercents.length > 0 ? Math.max(...contextPercents) : null;
   const remaining = maxContext !== null ? Math.max(0, 100 - maxContext) : null;
 
-  // Color the capacity — subtle unless critical
-  const capacityColor = maxContext === null
-    ? theme.tabInactiveText
-    : maxContext > 80
-      ? theme.statusExited
-      : theme.tabInactiveText;
-
-  const sections: React.ReactNode[] = [];
-
-  // Session counts with badges
-  if (claudeSessions.length > 0) {
-    sections.push(
-      <span key="claude" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        Claude
-        <span style={{
-          background: theme.borderSubtle,
-          color: theme.tabActiveText,
-          fontSize: 12,
-          fontWeight: 500,
-          minWidth: 20,
-          height: 20,
-          borderRadius: 10,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 6px',
-        }}>
-          {claudeSessions.length}
-        </span>
-      </span>
-    );
-  }
-  if (terminalSessions.length > 0) {
-    sections.push(
-      <span key="term" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        Terminals
-        <span style={{
-          background: theme.borderSubtle,
-          color: theme.tabActiveText,
-          fontSize: 12,
-          fontWeight: 500,
-          minWidth: 20,
-          height: 20,
-          borderRadius: 10,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 6px',
-        }}>
-          {terminalSessions.length}
-        </span>
-      </span>
-    );
-  }
-
-  // Capacity section
-  if (remaining !== null) {
-    sections.push(
-      <span key="cap">{remaining.toFixed(0)}% session left</span>
-    );
-  }
-
-  if (sections.length === 0) return null;
+  if (remaining === null) return null;
 
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      {sections.map((section, i) => (
-        <React.Fragment key={i}>
-          {i > 0 && divider(`div-${i}`)}
-          {section}
-        </React.Fragment>
-      ))}
+    <span style={{ fontSize: 13, color: maxContext! > 80 ? theme.statusExited : theme.tabInactiveText }}>
+      {remaining.toFixed(0)}% session left
     </span>
   );
 }
@@ -296,7 +214,7 @@ function formatTimeLeft(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function SessionTimer() {
+function SessionTimer() {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -346,13 +264,16 @@ export function SessionTimer() {
     : timeLeft < 2 * 60 * 60 * 1000 ? '#e5a100'
     : '#e5484d';
   const pillText = !isRunning && !isExpired ? theme.tabInactiveText : '#fff';
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div ref={menuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
       <button
         onClick={() => setMenuOpen(!menuOpen)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          background: pillBg,
+          background: isRunning || isExpired ? pillBg : hovered ? theme.tabHoverBackground : theme.borderSubtle,
           border: 'none',
           color: pillText,
           cursor: 'pointer',
@@ -362,7 +283,7 @@ export function SessionTimer() {
           padding: '4px 10px',
           borderRadius: 5,
           fontWeight: 500,
-          transition: 'background 0.12s',
+          transition: 'background 0.12s, color 0.12s',
         }}
       >
         {isRunning ? formatTimeLeft(timeLeft) : isExpired ? 'Reset due' : '0:00:00'}

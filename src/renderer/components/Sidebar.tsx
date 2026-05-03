@@ -6,7 +6,6 @@ import {
   getProjectSessions,
 } from '../store/session-context';
 import { disposeTerminal } from '../hooks/useTerminal';
-import { SessionTimer } from './Footer';
 import { theme } from '../theme';
 import { randomId } from '../utils';
 import type { SessionInfo } from '../../shared/types';
@@ -294,7 +293,6 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
         >
           <SidebarPill onClick={onShowSettings} label="Settings" />
           <SidebarPill onClick={onShowShortcuts} label="Help" />
-          <SessionTimer />
         </div>
       </div>
 
