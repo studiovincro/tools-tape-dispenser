@@ -33,9 +33,38 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
   });
 
   ipcMain.handle('store:save', (_event, payload: Record<string, unknown>) => {
+    // Validate payload shape before persisting
+    if (!Array.isArray(payload.projects) || !Array.isArray(payload.sessions)) {
+      console.warn('store:save: invalid payload shape');
+      return;
+    }
+    if (typeof payload.activeProjectId !== 'string' || typeof payload.layoutMode !== 'string') {
+      console.warn('store:save: invalid payload types');
+      return;
+    }
+    if (!/^[1-8]$/.test(payload.layoutMode)) {
+      console.warn('store:save: invalid layoutMode');
+      return;
+    }
+    for (const s of payload.sessions) {
+      if (!s || typeof s !== 'object' || typeof (s as any).cwd !== 'string') {
+        console.warn('store:save: invalid session entry');
+        return;
+      }
+    }
     const win = BrowserWindow.getFocusedWindow();
     const bounds = win?.getBounds() ?? null;
-    saveState({ ...payload, windowBounds: bounds } as any);
+    saveState({
+      projects: payload.projects,
+      activeProjectId: payload.activeProjectId,
+      sessions: payload.sessions,
+      layoutMode: payload.layoutMode,
+      sidebarCollapsed: !!payload.sidebarCollapsed,
+      sidebarWidth: typeof payload.sidebarWidth === 'number' ? payload.sidebarWidth : undefined,
+      sessionFilter: typeof payload.sessionFilter === 'string' ? payload.sessionFilter : undefined,
+      visibleSessionIndices: Array.isArray(payload.visibleSessionIndices) ? payload.visibleSessionIndices : undefined,
+      windowBounds: bounds,
+    } as any);
   });
 
   ipcMain.handle('store:load', () => {
