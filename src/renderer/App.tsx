@@ -34,9 +34,12 @@ function AppInner() {
   }, [dispatch, state.activeProjectId]);
 
   const closeSession = useCallback(async (id: string) => {
+    const session = state.sessions.find((s) => s.id === id);
+    const name = session?.label ?? 'this session';
+    if (!window.confirm(`Close "${name}"?`)) return;
     await window.electronAPI.killSession(id);
     dispatch({ type: 'REMOVE_SESSION', id });
-  }, [dispatch]);
+  }, [dispatch, state.sessions]);
 
   const renameSession = useCallback((id: string, label: string) => {
     dispatch({ type: 'RENAME_SESSION', id, label });
@@ -182,29 +185,26 @@ function AppInner() {
             });
             createdIds.push(result.id);
           }
-          if (persisted.layoutMode) {
-            const mode = /^[1-8]$/.test(persisted.layoutMode) ? persisted.layoutMode as LayoutMode : '1';
-            dispatch({ type: 'SET_LAYOUT', mode });
-          }
-          // Restore visible pane order
-          if (persisted.visibleSessionIndices && Array.isArray(persisted.visibleSessionIndices)) {
-            const visibleIds = (persisted.visibleSessionIndices as number[])
-              .map((i) => createdIds[i])
-              .filter(Boolean);
-            if (visibleIds.length > 0) {
-              dispatch({ type: 'SET_VISIBLE', ids: visibleIds });
-              dispatch({ type: 'SET_ACTIVE', id: visibleIds[0] });
-            }
-          }
-          if (persisted.sessionFilter) {
-            dispatch({ type: 'SET_SESSION_FILTER', filter: persisted.sessionFilter as SessionFilter });
-          }
           if (persisted.sidebarCollapsed) {
             dispatch({ type: 'TOGGLE_SIDEBAR' });
           }
           if (persisted.sidebarWidth) {
             dispatch({ type: 'SET_SIDEBAR_WIDTH', width: persisted.sidebarWidth });
           }
+          // Restore view state in one shot to avoid rebuild thrashing
+          const restoreLayout = persisted.layoutMode && /^[1-8]$/.test(persisted.layoutMode)
+            ? persisted.layoutMode as LayoutMode : '1';
+          const restoreFilter = (persisted.sessionFilter || 'all') as SessionFilter;
+          const restoreVisible = (persisted.visibleSessionIndices && Array.isArray(persisted.visibleSessionIndices))
+            ? (persisted.visibleSessionIndices as number[]).map((i) => createdIds[i]).filter(Boolean)
+            : [];
+          dispatch({
+            type: 'RESTORE_VIEW',
+            layoutMode: restoreLayout,
+            sessionFilter: restoreFilter,
+            visibleSessionIds: restoreVisible,
+            activeSessionId: restoreVisible.length > 0 ? restoreVisible[0] : null,
+          });
         } else if (persisted.sessions && persisted.sessions.length > 0) {
           for (const { cwd } of persisted.sessions) {
             const result = await window.electronAPI.createSession(cwd);

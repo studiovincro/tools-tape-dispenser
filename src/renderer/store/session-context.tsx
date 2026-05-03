@@ -21,7 +21,8 @@ type Action =
   | { type: 'SET_VISIBLE_SLOT'; index: number; sessionId: string }
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
-  | { type: 'RESTORE'; state: AppState };
+  | { type: 'RESTORE'; state: AppState }
+  | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null };
 
 const initialState: AppState = {
   projects: [{ id: DEFAULT_PROJECT_ID, name: 'General' }],
@@ -285,6 +286,15 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'RESTORE': {
       return action.state;
+    }
+    case 'RESTORE_VIEW': {
+      return {
+        ...state,
+        layoutMode: action.layoutMode,
+        sessionFilter: action.sessionFilter,
+        visibleSessionIds: action.visibleSessionIds,
+        activeSessionId: action.activeSessionId,
+      };
     }
     default:
       return state;
