@@ -225,8 +225,16 @@ function formatTimeLeft(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+const TIMER_STORAGE_KEY = 'session-timer-end';
+
 function SessionTimer() {
-  const [endTime, setEndTime] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(() => {
+    const saved = localStorage.getItem(TIMER_STORAGE_KEY);
+    if (!saved) return null;
+    const ts = Number(saved);
+    // If the saved end time is in the past, it expired while the app was closed
+    return ts > Date.now() ? ts : null;
+  });
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -237,7 +245,10 @@ function SessionTimer() {
     const tick = () => {
       const left = endTime - Date.now();
       setTimeLeft(Math.max(0, left));
-      if (left <= 0) setEndTime(null);
+      if (left <= 0) {
+        setEndTime(null);
+        localStorage.removeItem(TIMER_STORAGE_KEY);
+      }
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -258,13 +269,16 @@ function SessionTimer() {
   const isExpired = endTime !== null && timeLeft <= 0;
 
   const startTimer = (minutes: number) => {
-    setEndTime(Date.now() + minutes * 60 * 1000);
+    const end = Date.now() + minutes * 60 * 1000;
+    setEndTime(end);
+    localStorage.setItem(TIMER_STORAGE_KEY, String(end));
     setMenuOpen(false);
   };
 
   const stopTimer = () => {
     setEndTime(null);
     setTimeLeft(0);
+    localStorage.removeItem(TIMER_STORAGE_KEY);
     setMenuOpen(false);
   };
 
