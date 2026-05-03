@@ -93,7 +93,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
         <NewSessionBar onAddSession={onAddSession} />
 
         {/* Project tree */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '4px 0' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: 0 }}>
           {projects.map((project) => {
             const sessions = getProjectSessions(state, project.id);
             const isActive = project.id === activeProjectId;
@@ -106,7 +106,10 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                 activeSessionId={activeSessionId}
                 visibleSessionIds={visibleSessionIds}
                 onSelectProject={() => dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id })}
-                onSelectSession={(id) => dispatch({ type: 'SET_ACTIVE', id })}
+                onSelectSession={(id) => {
+                  if (!isActive) dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id });
+                  dispatch({ type: 'SET_ACTIVE', id });
+                }}
                 onRename={(name) => dispatch({ type: 'RENAME_PROJECT', projectId: project.id, name })}
                 onDelete={() => onDeleteProject(project.id)}
                 onCloseSession={onCloseSession}
@@ -257,7 +260,7 @@ function ProjectTree({
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          padding: '8px 12px',
+          padding: '10px 12px',
           cursor: 'pointer',
           borderLeft: isActive ? `3px solid ${theme.activeTabIndicator}` : '3px solid transparent',
           background: dragOver
@@ -358,7 +361,7 @@ function ProjectTree({
 
       {/* Session list with drop zones */}
       {expanded && (
-        <div style={{ paddingLeft: 16 }}>
+        <div style={{ paddingLeft: 0 }}>
           {sessions.map((session, idx) => {
             const isVisible = visibleSessionIds.includes(session.id);
             const paneColor = theme.paneIndicatorColors[session.colorIndex % theme.paneIndicatorColors.length];
@@ -445,11 +448,12 @@ function SessionItem({
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        padding: '6px 12px 6px 24px',
+        padding: '10px 12px 10px 36px',
         cursor: editing ? 'text' : 'grab',
-        background: isActive ? theme.tabHoverBackground : hovered ? theme.tabHoverBackground : 'transparent',
-        borderRadius: 4,
-        margin: '1px 4px',
+        background: isActive ? `${paneColor}12` : hovered ? theme.tabHoverBackground : 'transparent',
+        borderRadius: 0,
+        margin: 0,
+        fontWeight: isActive ? 500 : 400,
         transition: 'background 0.1s',
       }}
     >
@@ -463,17 +467,6 @@ function SessionItem({
           boxShadow: isVisible ? `0 0 0 2px ${paneColor}40` : 'none',
         }}
       />
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 600,
-          color: session.sessionType === 'claude' ? theme.activeTabIndicator : theme.tabInactiveText,
-          flexShrink: 0,
-        }}
-        title={session.sessionType === 'claude' ? 'Claude Code' : 'Terminal'}
-      >
-        {session.sessionType === 'claude' ? 'C' : '>'}
-      </span>
       {editing ? (
         <input
           ref={inputRef}
@@ -504,7 +497,7 @@ function SessionItem({
               fontSize: 14,
               fontFamily: 'system-ui',
               color: isActive ? theme.tabActiveText : theme.tabInactiveText,
-              fontWeight: isActive ? 500 : 400,
+              fontWeight: 'inherit',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -651,8 +644,8 @@ function DropZone({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       style={{
-        height: active ? 3 : 6,
-        margin: '0 8px 0 24px',
+        height: active ? 3 : 0,
+        margin: active ? '0 8px 0 36px' : 0,
         borderRadius: 2,
         background: active ? theme.activeTabIndicator : 'transparent',
         transition: 'height 0.1s, background 0.1s',
