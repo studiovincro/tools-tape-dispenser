@@ -60,16 +60,16 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       window.electronAPI.resizeSession(sessionId, cols, rows);
     });
 
-    // Cmd+K to clear terminal (only for non-Claude sessions with focus)
-    const clearHandler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k' && sessionType !== 'claude') {
-        if (containerRef.current && containerRef.current.contains(document.activeElement)) {
-          e.preventDefault();
-          terminal.clear();
-        }
-      }
-    };
-    window.addEventListener('keydown', clearHandler);
+    // Cmd+K to clear terminal (only for non-Claude sessions)
+    const clearAttachable = sessionType !== 'claude'
+      ? terminal.attachCustomKeyEventHandler((e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'k' && e.type === 'keydown') {
+            terminal.clear();
+            return false; // prevent xterm from processing it further
+          }
+          return true;
+        })
+      : null;
 
     // ResizeObserver to refit terminal when container resizes
     const resizeObserver = new ResizeObserver(() => {
@@ -81,7 +81,6 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       onDataDisposable.dispose();
       onResizeDisposable.dispose();
       unsubData();
-      window.removeEventListener('keydown', clearHandler);
       resizeObserver.disconnect();
       terminal.dispose();
       terminalRef.current = null;
