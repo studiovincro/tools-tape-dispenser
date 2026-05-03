@@ -9,7 +9,7 @@ import { theme } from '../theme';
 function getGridStyle(paneCount: number, minPaneWidth: number): React.CSSProperties {
   if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
   return {
-    gridTemplateColumns: `repeat(auto-fill, minmax(${minPaneWidth}px, 1fr))`,
+    gridTemplateColumns: `repeat(auto-fit, minmax(${minPaneWidth}px, 1fr))`,
     gridAutoRows: '1fr',
   };
 }
