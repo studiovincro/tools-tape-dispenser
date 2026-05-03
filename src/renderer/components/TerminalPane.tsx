@@ -5,10 +5,11 @@ import { theme } from '../theme';
 interface TerminalPaneProps {
   sessionId: string | null;
   visible?: boolean;
+  sessionType?: string;
 }
 
-export function TerminalPane({ sessionId, visible = true }: TerminalPaneProps) {
-  const { containerRef } = useTerminal(sessionId, visible);
+export function TerminalPane({ sessionId, visible = true, sessionType = 'claude' }: TerminalPaneProps) {
+  const { containerRef } = useTerminal(sessionId, visible, sessionType);
 
   return (
     <div

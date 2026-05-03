@@ -173,7 +173,7 @@ export function SplitLayout() {
                 />
               )}
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <TerminalPane sessionId={id} visible />
+                <TerminalPane sessionId={id} visible sessionType={session?.sessionType} />
               </div>
             </PaneSlot>
           );
@@ -195,7 +195,7 @@ export function SplitLayout() {
               visibility: 'hidden',
             }}
           >
-            <TerminalPane sessionId={s.id} visible={false} />
+            <TerminalPane sessionId={s.id} visible={false} sessionType={s.sessionType} />
           </div>
         ))}
       {contextMenu && (

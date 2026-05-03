@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export function useTerminal(sessionId: string | null, visible: boolean = true) {
+export function useTerminal(sessionId: string | null, visible: boolean = true, sessionType: string = 'claude') {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -60,6 +60,17 @@ export function useTerminal(sessionId: string | null, visible: boolean = true) {
       window.electronAPI.resizeSession(sessionId, cols, rows);
     });
 
+    // Cmd+K to clear terminal (only for non-Claude sessions with focus)
+    const clearHandler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k' && sessionType !== 'claude') {
+        if (containerRef.current && containerRef.current.contains(document.activeElement)) {
+          e.preventDefault();
+          terminal.clear();
+        }
+      }
+    };
+    window.addEventListener('keydown', clearHandler);
+
     // ResizeObserver to refit terminal when container resizes
     const resizeObserver = new ResizeObserver(() => {
       try { fitAddon.fit(); } catch {}
@@ -70,6 +81,7 @@ export function useTerminal(sessionId: string | null, visible: boolean = true) {
       onDataDisposable.dispose();
       onResizeDisposable.dispose();
       unsubData();
+      window.removeEventListener('keydown', clearHandler);
       resizeObserver.disconnect();
       terminal.dispose();
       terminalRef.current = null;
