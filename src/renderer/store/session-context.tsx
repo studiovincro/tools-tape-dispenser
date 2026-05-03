@@ -203,15 +203,13 @@ function reducer(state: AppState, action: Action): AppState {
     // --- Session actions ---
     case 'ADD_SESSION': {
       const sessions = [...state.sessions, action.session];
-      const newState = { ...state, sessions };
-      const projectSessions = getProjectSessions(newState);
-      const layoutMode = state.layoutMode;
+      const newState = { ...state, sessions, activeSessionId: action.session.id };
+      const filtered = getFilteredProjectSessions(newState);
+      const layoutMode = clampLayout(state.layoutMode, filtered.length);
       return {
         ...newState,
-        activeSessionId: action.session.id,
-        visibleSessionIds: layoutMode === '1'
-          ? [action.session.id]
-          : [...state.visibleSessionIds, action.session.id].slice(0, maxPanes(layoutMode)),
+        layoutMode,
+        visibleSessionIds: rebuildVisible(newState, layoutMode),
       };
     }
     case 'REMOVE_SESSION': {
