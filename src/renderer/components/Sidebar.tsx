@@ -285,22 +285,14 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
-            padding: '8px 10px',
+            gap: 6,
+            padding: '8px 12px',
             borderTop: `1px solid ${theme.borderSubtle}`,
             flexShrink: 0,
           }}
         >
-          <SidebarIconButton
-            onClick={onShowSettings}
-            title="Settings (Cmd+,)"
-            icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6.5 1.5h3l.4 1.6.5.2 1.5-.8 2.1 2.1-.8 1.5.2.5 1.6.4v3l-1.6.4-.2.5.8 1.5-2.1 2.1-1.5-.8-.5.2-.4 1.6h-3l-.4-1.6-.5-.2-1.5.8-2.1-2.1.8-1.5-.2-.5L1.5 9.5v-3l1.6-.4.2-.5-.8-1.5 2.1-2.1 1.5.8.5-.2.4-1.6z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2"/></svg>}
-          />
-          <SidebarIconButton
-            onClick={onShowShortcuts}
-            title="Keyboard shortcuts (Cmd+?)"
-            icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4.5" width="13" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><line x1="4" y1="7.5" x2="4" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="7" y1="7.5" x2="7" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="10" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="5.5" y1="10" x2="10.5" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>}
-          />
+          <SidebarPill onClick={onShowSettings} label="Settings" shortcut="," />
+          <SidebarPill onClick={onShowShortcuts} label="Shortcuts" shortcut="?" />
         </div>
       </div>
 
@@ -867,28 +859,31 @@ function MenuOption({ label, sublabel, onClick }: { label: string; sublabel: str
   );
 }
 
-function SidebarIconButton({ onClick, title, icon }: { onClick: () => void; title: string; icon: React.ReactNode }) {
+function SidebarPill({ onClick, label, shortcut }: { onClick: () => void; label: string; shortcut: string }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      title={title}
       style={{
-        background: hovered ? theme.tabHoverBackground : 'transparent',
+        background: hovered ? theme.tabHoverBackground : theme.borderSubtle,
         border: 'none',
-        color: theme.buttonMuted,
+        color: theme.tabInactiveText,
         cursor: 'pointer',
-        padding: '5px 7px',
+        padding: '4px 10px',
         borderRadius: 5,
+        fontSize: 12,
+        fontFamily: 'system-ui',
+        fontWeight: 500,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'background 0.12s',
+        gap: 4,
+        transition: 'background 0.12s, color 0.12s',
       }}
     >
-      {icon}
+      {label}
+      <span style={{ opacity: 0.5, fontSize: 11 }}>⌘{shortcut}</span>
     </button>
   );
 }
