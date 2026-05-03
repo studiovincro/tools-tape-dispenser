@@ -62,8 +62,8 @@ export function Footer({ onCycleLayout }: FooterProps) {
   return (
     <div
       style={{
-        height: 33,
-        minHeight: 33,
+        height: 40,
+        minHeight: 40,
         boxSizing: 'border-box',
         flexShrink: 0,
         background: theme.tabBarBackground,
@@ -71,7 +71,7 @@ export function Footer({ onCycleLayout }: FooterProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
+        padding: '0 16px',
         fontSize: 14,
         fontFamily: 'system-ui, -apple-system, sans-serif',
         color: theme.tabInactiveText,
@@ -83,7 +83,7 @@ export function Footer({ onCycleLayout }: FooterProps) {
       </div>
 
       {/* Right: shortcuts + layout toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <FilterToggle
           value={sessionFilter}
           counts={{

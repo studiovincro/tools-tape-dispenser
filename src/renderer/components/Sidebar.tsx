@@ -285,43 +285,22 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
-            padding: '8px 12px',
+            gap: 2,
+            padding: '8px 10px',
             borderTop: `1px solid ${theme.borderSubtle}`,
             flexShrink: 0,
           }}
         >
-          <button
+          <SidebarIconButton
             onClick={onShowSettings}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: theme.buttonMuted,
-              cursor: 'pointer',
-              fontSize: 16,
-              padding: '4px 6px',
-              borderRadius: 4,
-            }}
             title="Settings (Cmd+,)"
-          >
-            ⚙
-          </button>
-          <button
+            icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6.5 1.5h3l.4 1.6.5.2 1.5-.8 2.1 2.1-.8 1.5.2.5 1.6.4v3l-1.6.4-.2.5.8 1.5-2.1 2.1-1.5-.8-.5.2-.4 1.6h-3l-.4-1.6-.5-.2-1.5.8-2.1-2.1.8-1.5-.2-.5L1.5 9.5v-3l1.6-.4.2-.5-.8-1.5 2.1-2.1 1.5.8.5-.2.4-1.6z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2"/></svg>}
+          />
+          <SidebarIconButton
             onClick={onShowShortcuts}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: theme.buttonMuted,
-              cursor: 'pointer',
-              fontSize: 14,
-              fontFamily: 'system-ui',
-              padding: '4px 6px',
-              borderRadius: 4,
-            }}
             title="Keyboard shortcuts (Cmd+?)"
-          >
-            ⌘?
-          </button>
+            icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4.5" width="13" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><line x1="4" y1="7.5" x2="4" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="7" y1="7.5" x2="7" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="10" y1="7.5" x2="10" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="5.5" y1="10" x2="10.5" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>}
+          />
         </div>
       </div>
 
@@ -885,6 +864,32 @@ function MenuOption({ label, sublabel, onClick }: { label: string; sublabel: str
         {sublabel}
       </div>
     </div>
+  );
+}
+
+function SidebarIconButton({ onClick, title, icon }: { onClick: () => void; title: string; icon: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      title={title}
+      style={{
+        background: hovered ? theme.tabHoverBackground : 'transparent',
+        border: 'none',
+        color: theme.buttonMuted,
+        cursor: 'pointer',
+        padding: '5px 7px',
+        borderRadius: 5,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background 0.12s',
+      }}
+    >
+      {icon}
+    </button>
   );
 }
 
