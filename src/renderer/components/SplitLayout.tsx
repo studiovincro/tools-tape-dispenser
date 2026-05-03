@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { TerminalPane } from './TerminalPane';
+import { ContextMenu, type MenuItem } from './ContextMenu';
 import { useSessionState, useSessionDispatch } from '../store/session-context';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
@@ -29,6 +30,65 @@ export function SplitLayout() {
   const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId } = useSessionState();
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+
+  const showPaneMenu = useCallback((e: React.MouseEvent, id: string, index: number) => {
+    e.preventDefault();
+    const session = sessions.find((s) => s.id === id);
+    if (!session) return;
+
+    // Other visible panes for swapping positions
+    const otherPanes = visibleSessionIds
+      .map((vid, i) => ({ id: vid, index: i, session: sessions.find((s) => s.id === vid) }))
+      .filter((p) => p.id !== id && p.session);
+
+    // Off-stage sessions from the active project for replacing this pane
+    const projectSessions = sessions.filter((s) => s.projectId === session.projectId);
+    const offStage = projectSessions.filter((s) => !visibleSessionIds.includes(s.id));
+
+    const swapItems: MenuItem[] = [
+      ...otherPanes.map((p) => ({
+        label: `↔ ${p.session!.label}`,
+        onClick: () => {
+          const visible = [...visibleSessionIds];
+          visible[index] = p.id;
+          visible[p.index] = id;
+          dispatch({ type: 'SET_VISIBLE', ids: visible });
+          dispatch({ type: 'SET_ACTIVE', id });
+        },
+      })),
+      ...offStage.map((s) => ({
+        label: s.label,
+        onClick: () => {
+          dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: s.id });
+          dispatch({ type: 'SET_ACTIVE', id });
+        },
+      })),
+    ];
+
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { label: 'Focus', onClick: () => { dispatch({ type: 'SET_LAYOUT', mode: '1' }); dispatch({ type: 'SET_ACTIVE', id }); } },
+        ...(isMultiPane ? [{ label: 'Remove from Stage', onClick: () => dispatch({ type: 'REMOVE_FROM_STAGE', id }) }] : []),
+        ...(swapItems.length > 0 ? [{
+          label: 'Replace with',
+          onClick: () => {},
+          submenu: swapItems,
+        }] : []),
+        { label: 'Rename', onClick: () => {
+          const name = window.prompt('Session name:', session.label);
+          if (name) dispatch({ type: 'RENAME_SESSION', id, label: name });
+        }},
+        { label: 'Close Session', onClick: () => {
+          if (window.confirm(`Close "${session.label}"?`)) {
+            window.electronAPI.killSession(id);
+            dispatch({ type: 'REMOVE_SESSION', id });
+          }
+        }, danger: true },
+      ],
+    });
+  }, [sessions, visibleSessionIds, isMultiPane, dispatch]);
 
   if (visibleSessionIds.length === 0) {
     return (
@@ -109,6 +169,7 @@ export function SplitLayout() {
                   showClose={isMultiPane}
                   onClose={() => dispatch({ type: 'REMOVE_FROM_STAGE', id })}
                   onDoubleClick={() => focusPane(id)}
+                  onContextMenu={(e) => showPaneMenu(e, id, index)}
                 />
               )}
               <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -137,6 +198,14 @@ export function SplitLayout() {
             <TerminalPane sessionId={s.id} visible={false} />
           </div>
         ))}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
@@ -148,8 +217,10 @@ function PaneHeader({
   showClose,
   onClose,
   onDoubleClick,
+  onContextMenu,
 }: {
   projectName: string;
+  onContextMenu: (e: React.MouseEvent) => void;
   session: SessionInfo;
   color: string;
   showClose: boolean;
@@ -163,6 +234,7 @@ function PaneHeader({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
       style={{
         height: 37,
         minHeight: 37,
