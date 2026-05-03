@@ -3,19 +3,23 @@ import { contextBridge, ipcRenderer } from 'electron';
 interface SaveStatePayload {
   projects: Array<{ id: string; name: string }>;
   activeProjectId: string;
-  sessions: Array<{ cwd: string; projectId: string; sessionType?: string }>;
+  sessions: Array<{ cwd: string; projectId: string; sessionType?: string; label?: string; colorIndex?: number }>;
   layoutMode: string;
   sidebarCollapsed: boolean;
   sidebarWidth?: number;
+  sessionFilter?: string;
+  visibleSessionIndices?: number[];
 }
 
 interface LoadStateResult {
   projects: Array<{ id: string; name: string }>;
   activeProjectId: string;
-  sessions: Array<{ cwd: string; projectId?: string; sessionType?: string }>;
+  sessions: Array<{ cwd: string; projectId?: string; sessionType?: string; label?: string; colorIndex?: number }>;
   layoutMode: string;
   sidebarCollapsed: boolean;
   sidebarWidth?: number;
+  sessionFilter?: string;
+  visibleSessionIndices?: number[];
   windowBounds: { x: number; y: number; width: number; height: number } | null;
 }
 

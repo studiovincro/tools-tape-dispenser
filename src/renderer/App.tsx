@@ -11,7 +11,7 @@ import { SplitLayout } from './components/SplitLayout';
 import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { ShortcutHelp } from './components/ShortcutHelp';
-import type { LayoutMode, SessionType } from '../shared/types';
+import type { LayoutMode, SessionType, SessionFilter } from '../shared/types';
 import { theme } from './theme';
 
 function AppInner() {
@@ -171,16 +171,33 @@ function AppInner() {
           if (persisted.activeProjectId) {
             dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: persisted.activeProjectId });
           }
-          for (const { cwd, projectId, sessionType, label } of persisted.sessions as Array<{ cwd: string; projectId?: string; sessionType?: string; label?: string }>) {
+          const createdIds: string[] = [];
+          for (const { cwd, projectId, sessionType, label, colorIndex } of persisted.sessions as Array<{ cwd: string; projectId?: string; sessionType?: string; label?: string; colorIndex?: number }>) {
+            const ci = colorIndex ?? colorCounter.current++;
+            if (ci >= colorCounter.current) colorCounter.current = ci + 1;
             const result = await window.electronAPI.createSession(cwd, (sessionType as SessionType) || 'claude');
             dispatch({
               type: 'ADD_SESSION',
-              session: { ...result, label: label || result.label, status: 'running', projectId: projectId || DEFAULT_PROJECT_ID, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
+              session: { ...result, label: label || result.label, status: 'running', projectId: projectId || DEFAULT_PROJECT_ID, contextPercent: null, createdAt: Date.now(), colorIndex: ci },
             });
+            createdIds.push(result.id);
           }
           if (persisted.layoutMode) {
             const mode = /^[1-8]$/.test(persisted.layoutMode) ? persisted.layoutMode as LayoutMode : '1';
             dispatch({ type: 'SET_LAYOUT', mode });
+          }
+          // Restore visible pane order
+          if (persisted.visibleSessionIndices && Array.isArray(persisted.visibleSessionIndices)) {
+            const visibleIds = (persisted.visibleSessionIndices as number[])
+              .map((i) => createdIds[i])
+              .filter(Boolean);
+            if (visibleIds.length > 0) {
+              dispatch({ type: 'SET_VISIBLE', ids: visibleIds });
+              dispatch({ type: 'SET_ACTIVE', id: visibleIds[0] });
+            }
+          }
+          if (persisted.sessionFilter) {
+            dispatch({ type: 'SET_SESSION_FILTER', filter: persisted.sessionFilter as SessionFilter });
           }
           if (persisted.sidebarCollapsed) {
             dispatch({ type: 'TOGGLE_SIDEBAR' });
@@ -219,10 +236,13 @@ function AppInner() {
       window.electronAPI.saveState({
         projects: state.projects,
         activeProjectId: state.activeProjectId,
-        sessions: state.sessions.map((s) => ({ cwd: s.cwd, projectId: s.projectId, sessionType: s.sessionType, label: s.label })),
+        sessions: state.sessions.map((s) => ({ cwd: s.cwd, projectId: s.projectId, sessionType: s.sessionType, label: s.label, colorIndex: s.colorIndex })),
         layoutMode: state.layoutMode,
         sidebarCollapsed: state.sidebarCollapsed,
         sidebarWidth: state.sidebarWidth,
+        sessionFilter: state.sessionFilter,
+        // Save visible pane order as session indices within the full session list
+        visibleSessionIndices: state.visibleSessionIds.map((id) => state.sessions.findIndex((s) => s.id === id)).filter((i) => i !== -1),
       });
     };
     window.addEventListener('beforeunload', handler);

@@ -31,16 +31,10 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
     return result.filePaths[0];
   });
 
-  ipcMain.handle('store:save', (_event, payload: {
-    projects: Array<{ id: string; name: string }>;
-    activeProjectId: string;
-    sessions: Array<{ cwd: string; projectId: string; sessionType?: string }>;
-    layoutMode: LayoutMode;
-    sidebarCollapsed: boolean;
-  }) => {
+  ipcMain.handle('store:save', (_event, payload: Record<string, unknown>) => {
     const win = BrowserWindow.getFocusedWindow();
     const bounds = win?.getBounds() ?? null;
-    saveState({ ...payload, windowBounds: bounds });
+    saveState({ ...payload, windowBounds: bounds } as any);
   });
 
   ipcMain.handle('store:load', () => {

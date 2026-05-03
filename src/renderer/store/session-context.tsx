@@ -240,10 +240,22 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'SET_LAYOUT': {
       const newState = { ...state, layoutMode: action.mode };
-      return {
-        ...newState,
-        visibleSessionIds: rebuildVisible(newState, action.mode),
-      };
+      const max = maxPanes(action.mode);
+      const filtered = getFilteredProjectSessions(newState);
+      // Preserve existing order — trim if shrinking, add from filtered if growing
+      let visible = [...state.visibleSessionIds].filter((id) => filtered.some((s) => s.id === id));
+      if (visible.length > max) {
+        visible = visible.slice(0, max);
+      } else if (visible.length < max) {
+        for (const s of filtered) {
+          if (visible.length >= max) break;
+          if (!visible.includes(s.id)) visible.push(s.id);
+        }
+      }
+      if (visible.length === 0 && filtered.length > 0) {
+        visible = [filtered[0].id];
+      }
+      return { ...newState, visibleSessionIds: visible };
     }
     case 'SET_VISIBLE': {
       return { ...state, visibleSessionIds: action.ids };
