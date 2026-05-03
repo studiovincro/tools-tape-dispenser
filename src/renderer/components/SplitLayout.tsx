@@ -165,14 +165,19 @@ function PaneHeader({
       />
       <span
         style={{
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          background: statusColors[session.status],
-          flexShrink: 0,
+          fontSize: 14,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontWeight: 500,
+          color: theme.tabActiveText,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          flex: 1,
         }}
-        title={statusLabels[session.status]}
-      />
+        title={session.cwd}
+      >
+        {projectName} - {session.label}
+      </span>
       <span
         style={{
           fontSize: 12,
@@ -188,21 +193,6 @@ function PaneHeader({
         }}
       >
         {session.sessionType === 'claude' ? 'Claude' : 'Term'}
-      </span>
-      <span
-        style={{
-          fontSize: 14,
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          fontWeight: 500,
-          color: theme.tabActiveText,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          flex: 1,
-        }}
-        title={session.cwd}
-      >
-        {projectName} - {session.label}
       </span>
       {showClose && hovered && (
         <span
