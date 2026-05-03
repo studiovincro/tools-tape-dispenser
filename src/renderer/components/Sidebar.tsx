@@ -5,6 +5,7 @@ import {
   useSessionDispatch,
   getProjectSessions,
 } from '../store/session-context';
+import { disposeTerminal } from '../hooks/useTerminal';
 import { theme } from '../theme';
 import { randomId } from '../utils';
 import type { SessionInfo } from '../../shared/types';
@@ -85,12 +86,22 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
 
   const showProjectMenu = (e: React.MouseEvent, projectId: string) => {
     e.preventDefault();
+    const projectSessions = getProjectSessions(state, projectId);
     setContextMenu({
       x: e.clientX, y: e.clientY,
       items: [
         { label: 'Rename', onClick: () => setEditingProjectId(projectId) },
         { label: 'Add Claude Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('claude'); } },
         { label: 'Add Terminal Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('terminal'); } },
+        ...(projectSessions.length > 0 ? [{ label: 'Close All Sessions', onClick: async () => {
+          const count = projectSessions.length;
+          if (!window.confirm(`Close all ${count} session${count !== 1 ? 's' : ''} in this project?`)) return;
+          for (const s of projectSessions) {
+            await window.electronAPI.killSession(s.id);
+            disposeTerminal(s.id);
+            dispatch({ type: 'REMOVE_SESSION', id: s.id });
+          }
+        }, danger: true }] : []),
         ...(projects.length > 1 ? [{ label: 'Delete Project', onClick: () => onDeleteProject(projectId), danger: true }] : []),
       ],
     });
