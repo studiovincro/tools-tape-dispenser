@@ -762,7 +762,20 @@ function NewSessionBar({ onAddSession }: { onAddSession: (type: 'claude' | 'term
       >
         New Session
       </span>
-      <span style={{ color: theme.buttonMuted, fontSize: 18, lineHeight: 1 }}>+</span>
+      <button
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: theme.buttonMuted,
+          cursor: 'pointer',
+          fontSize: 18,
+          padding: '0 4px',
+          lineHeight: 1,
+        }}
+        onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+      >
+        +
+      </button>
 
       {menuOpen && (
         <div
