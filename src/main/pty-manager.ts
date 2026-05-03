@@ -45,6 +45,11 @@ function buildPtyEnv(): Record<string, string> {
   return env;
 }
 
+const ALLOWED_SHELLS = ['/bin/bash', '/bin/zsh', '/bin/sh', '/bin/fish', '/usr/local/bin/fish', '/opt/homebrew/bin/fish'];
+const MAX_SESSIONS = 16;
+const MAX_COLS = 500;
+const MAX_ROWS = 200;
+
 export class PtyManager {
   private sessions = new Map<string, ManagedSession>();
   private win: BrowserWindow | null = null;
@@ -54,6 +59,11 @@ export class PtyManager {
   }
 
   createSession(cwd: string, sessionType: SessionType = 'claude', cols = 80, rows = 24): CreateSessionResult {
+    // Cap concurrent sessions
+    if (this.sessions.size >= MAX_SESSIONS) {
+      throw new Error(`Maximum ${MAX_SESSIONS} concurrent sessions reached`);
+    }
+
     // Validate cwd is a real, accessible directory
     const resolved = path.resolve(cwd);
     try {
@@ -70,12 +80,22 @@ export class PtyManager {
       throw new Error(`Invalid session type: ${sessionType}`);
     }
 
+    // Clamp cols/rows to safe bounds
+    const safeCols = Math.max(1, Math.min(MAX_COLS, Math.floor(cols) || 80));
+    const safeRows = Math.max(1, Math.min(MAX_ROWS, Math.floor(rows) || 24));
+
     const id = randomUUID();
-    const command = sessionType === 'claude' ? 'claude' : process.env.SHELL || '/bin/zsh';
+    let command: string;
+    if (sessionType === 'claude') {
+      command = 'claude';
+    } else {
+      const userShell = process.env.SHELL || '/bin/zsh';
+      command = ALLOWED_SHELLS.includes(userShell) ? userShell : '/bin/zsh';
+    }
     const shell = pty.spawn(command, [], {
       name: 'xterm-256color',
-      cols,
-      rows,
+      cols: safeCols,
+      rows: safeRows,
       cwd: resolved,
       env: buildPtyEnv(),
     });
@@ -133,7 +153,9 @@ export class PtyManager {
       console.warn(`resizeSession: unknown session ${id}`);
       return;
     }
-    session.pty.resize(cols, rows);
+    const safeCols = Math.max(1, Math.min(MAX_COLS, Math.floor(cols) || 80));
+    const safeRows = Math.max(1, Math.min(MAX_ROWS, Math.floor(rows) || 24));
+    session.pty.resize(safeCols, safeRows);
   }
 
   killSession(id: string): void {
