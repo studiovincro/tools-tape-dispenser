@@ -205,7 +205,9 @@ function reducer(state: AppState, action: Action): AppState {
       const sessions = [...state.sessions, action.session];
       const newState = { ...state, sessions, activeSessionId: action.session.id };
       const filtered = getFilteredProjectSessions(newState);
-      const layoutMode = clampLayout(state.layoutMode, filtered.length);
+      // Grow layout to include the new session, up to max 8
+      const desiredPanes = Math.min(filtered.length, 8);
+      const layoutMode = String(desiredPanes) as LayoutMode;
       return {
         ...newState,
         layoutMode,
