@@ -6,6 +6,7 @@ import {
   getProjectSessions,
 } from '../store/session-context';
 import { disposeTerminal } from '../hooks/useTerminal';
+import { SessionTimer } from './Footer';
 import { theme } from '../theme';
 import { randomId } from '../utils';
 import type { SessionInfo } from '../../shared/types';
@@ -291,8 +292,9 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             flexShrink: 0,
           }}
         >
-          <SidebarPill onClick={onShowSettings} label="Settings" shortcut="," />
-          <SidebarPill onClick={onShowShortcuts} label="Help" shortcut="?" />
+          <SidebarPill onClick={onShowSettings} label="Settings" />
+          <SidebarPill onClick={onShowShortcuts} label="Help" />
+          <SessionTimer />
         </div>
       </div>
 
@@ -859,7 +861,7 @@ function MenuOption({ label, sublabel, onClick }: { label: string; sublabel: str
   );
 }
 
-function SidebarPill({ onClick, label, shortcut }: { onClick: () => void; label: string; shortcut: string }) {
+function SidebarPill({ onClick, label }: { onClick: () => void; label: string }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -876,14 +878,10 @@ function SidebarPill({ onClick, label, shortcut }: { onClick: () => void; label:
         fontSize: 12,
         fontFamily: 'system-ui',
         fontWeight: 500,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
         transition: 'background 0.12s, color 0.12s',
       }}
     >
       {label}
-      <span style={{ opacity: 0.5, fontSize: 11 }}>⌘{shortcut}</span>
     </button>
   );
 }

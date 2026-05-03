@@ -80,8 +80,6 @@ export function Footer({ onCycleLayout }: FooterProps) {
       {/* Left: session counts + capacity */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <SessionStats sessions={state.sessions} />
-        {divider('timer-div')}
-        <SessionTimer />
       </div>
 
       {/* Right: filter + layout toggle */}
@@ -298,7 +296,7 @@ function formatTimeLeft(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function SessionTimer() {
+export function SessionTimer() {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -341,29 +339,30 @@ function SessionTimer() {
     setMenuOpen(false);
   };
 
-  const timerColor = !isRunning ? theme.tabInactiveText
-    : timeLeft < 2 * 60 * 1000 ? theme.statusExited
-    : timeLeft < 10 * 60 * 1000 ? '#c87800'
-    : theme.tabInactiveText;
+  // Traffic light: green < 1h remaining, amber < 2h, red >= 2h
+  const pillBg = !isRunning && !isExpired ? theme.borderSubtle
+    : isExpired ? '#e5484d'
+    : timeLeft < 60 * 60 * 1000 ? '#30a46c'
+    : timeLeft < 2 * 60 * 60 * 1000 ? '#e5a100'
+    : '#e5484d';
+  const pillText = !isRunning && !isExpired ? theme.tabInactiveText : '#fff';
 
   return (
     <div ref={menuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
       <button
         onClick={() => setMenuOpen(!menuOpen)}
         style={{
-          background: isExpired ? `${theme.statusExited}18` : 'transparent',
+          background: pillBg,
           border: 'none',
-          color: isExpired ? theme.statusExited : timerColor,
+          color: pillText,
           cursor: 'pointer',
-          fontSize: 13,
+          fontSize: 12,
           fontFamily: 'system-ui',
           fontVariantNumeric: 'tabular-nums',
-          padding: '2px 8px',
-          borderRadius: 4,
-          fontWeight: isRunning ? 500 : 400,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
+          padding: '4px 10px',
+          borderRadius: 5,
+          fontWeight: 500,
+          transition: 'background 0.12s',
         }}
       >
         {isRunning ? formatTimeLeft(timeLeft) : isExpired ? 'Reset due' : 'Timer'}
