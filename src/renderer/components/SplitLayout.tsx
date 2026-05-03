@@ -48,20 +48,20 @@ export function SplitLayout() {
 
     const swapItems: MenuItem[] = [
       ...otherPanes.map((p) => ({
-        label: `↔ ${p.session!.label}`,
+        label: p.session!.label,
         onClick: () => {
           const visible = [...visibleSessionIds];
           visible[index] = p.id;
           visible[p.index] = id;
           dispatch({ type: 'SET_VISIBLE', ids: visible });
-          dispatch({ type: 'SET_ACTIVE', id });
+          dispatch({ type: 'SET_ACTIVE', id: p.id });
         },
       })),
       ...offStage.map((s) => ({
         label: s.label,
         onClick: () => {
           dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: s.id });
-          dispatch({ type: 'SET_ACTIVE', id });
+          dispatch({ type: 'SET_ACTIVE', id: s.id });
         },
       })),
     ];
