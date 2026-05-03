@@ -32,13 +32,21 @@ const createWindow = () => {
 
   ptyManager.setWindow(mainWindow);
 
+  // Prevent the renderer from navigating away from the app
+  mainWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+
+  // Block window.open() and similar popup attempts
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
   // Kill all ptys before the window is destroyed to avoid "Object has been destroyed" errors
   mainWindow.on('close', () => {
     ptyManager.killAll();
   });
 
-  // Open devtools in development
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  // Open devtools only in development (not packaged builds)
+  if (!app.isPackaged && MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 

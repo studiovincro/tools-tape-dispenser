@@ -1,4 +1,5 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { app } from 'electron';
 import { PtyManager } from './pty-manager';
 import { saveState, loadState } from './session-store';
 import type { LayoutMode, SessionType } from '../shared/types';
@@ -40,4 +41,5 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
   ipcMain.handle('store:load', () => {
     return loadState();
   });
+
 }
