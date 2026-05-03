@@ -158,6 +158,7 @@ export function SplitLayout() {
             <PaneSlot
               key={`slot-${index}`}
               index={index}
+              isLast={index === visibleSessionIds.length - 1}
               isFocused={isFocused}
               isMultiPane={isMultiPane}
               paneColor={paneColor}
@@ -333,6 +334,7 @@ function PaneHeader({
 
 function PaneSlot({
   index,
+  isLast,
   isFocused,
   isMultiPane,
   paneColor,
@@ -341,6 +343,7 @@ function PaneSlot({
   children,
 }: {
   index: number;
+  isLast: boolean;
   isFocused: boolean;
   isMultiPane: boolean;
   paneColor: string;
@@ -366,6 +369,7 @@ function PaneSlot({
         background: theme.appBackground,
         display: 'flex',
         flexDirection: 'column',
+        gridColumn: isLast ? '-1 / 1' : undefined,
         border: isMultiPane
           ? `2px solid ${dragOver ? theme.activeTabIndicator : isFocused ? paneColor : theme.borderSubtle}`
           : 'none',
