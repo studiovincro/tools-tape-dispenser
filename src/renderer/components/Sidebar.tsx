@@ -15,6 +15,8 @@ interface SidebarProps {
   onCloseSession: (id: string) => void;
   onRenameSession: (id: string, label: string) => void;
   onDeleteProject: (projectId: string) => void;
+  onShowSettings: () => void;
+  onShowShortcuts: () => void;
 }
 
 const statusColors: Record<SessionInfo['status'], string> = {
@@ -23,7 +25,7 @@ const statusColors: Record<SessionInfo['status'], string> = {
   exited: theme.statusExited,
 };
 
-export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject }: SidebarProps) {
+export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts }: SidebarProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds } = state;
@@ -278,6 +280,49 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           })}
         </div>
 
+        {/* Bottom bar — settings + shortcuts */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 12px',
+            borderTop: `1px solid ${theme.borderSubtle}`,
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={onShowSettings}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: theme.buttonMuted,
+              cursor: 'pointer',
+              fontSize: 16,
+              padding: '4px 6px',
+              borderRadius: 4,
+            }}
+            title="Settings (Cmd+,)"
+          >
+            ⚙
+          </button>
+          <button
+            onClick={onShowShortcuts}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: theme.buttonMuted,
+              cursor: 'pointer',
+              fontSize: 14,
+              fontFamily: 'system-ui',
+              padding: '4px 6px',
+              borderRadius: 4,
+            }}
+            title="Keyboard shortcuts (Cmd+?)"
+          >
+            ⌘?
+          </button>
+        </div>
       </div>
 
       {/* Draggable divider */}

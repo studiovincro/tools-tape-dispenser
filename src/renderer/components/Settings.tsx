@@ -11,7 +11,7 @@ interface SettingsProps {
 
 function SettingsRow({ label, desc, children }: { label: string; desc: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '14px 0', borderBottom: `1px solid ${theme.borderSubtle}` }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontFamily: 'system-ui', color: theme.tabActiveText, fontWeight: 500 }}>{label}</div>
         <div style={{ fontSize: 12, fontFamily: 'system-ui', color: theme.tabInactiveText, marginTop: 2 }}>{desc}</div>
@@ -92,7 +92,7 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
           Settings
         </h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {/* Min pane width */}
           <SettingsRow label="Min pane width (px)" desc="Minimum width before panes wrap to a new row">
             <input
@@ -146,7 +146,7 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
           </SettingsRow>
 
           {/* Default project directory */}
-          <div>
+          <div style={{ padding: '14px 0', borderBottom: `1px solid ${theme.borderSubtle}` }}>
             <div style={labelStyle}>Default project directory</div>
             <div style={descStyle}>Skip the directory picker when creating sessions</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>

@@ -11,8 +11,6 @@ import { theme } from '../theme';
 
 interface FooterProps {
   onCycleLayout: () => void;
-  onShowShortcuts: () => void;
-  onShowSettings: () => void;
 }
 
 function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
@@ -42,7 +40,7 @@ function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>{rects}</svg>;
 }
 
-export function Footer({ onCycleLayout, onShowShortcuts, onShowSettings }: FooterProps) {
+export function Footer({ onCycleLayout }: FooterProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const { layoutMode, sessionFilter, sidebarWidth, sidebarCollapsed, settings } = state;
@@ -95,37 +93,6 @@ export function Footer({ onCycleLayout, onShowShortcuts, onShowSettings }: Foote
           }}
           onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })}
         />
-        <button
-          onClick={onShowSettings}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: theme.buttonMuted,
-            cursor: 'pointer',
-            fontSize: 16,
-            padding: '2px 6px',
-            borderRadius: 4,
-          }}
-          title="Settings (Cmd+,)"
-        >
-          ⚙
-        </button>
-        <button
-          onClick={onShowShortcuts}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: theme.buttonMuted,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontFamily: 'system-ui',
-            padding: '2px 6px',
-            borderRadius: 4,
-          }}
-          title="Keyboard shortcuts (Cmd+?)"
-        >
-          ⌘?
-        </button>
         {showLayoutButton && (
           <button
             onClick={onCycleLayout}

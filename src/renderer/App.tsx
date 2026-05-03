@@ -300,13 +300,15 @@ function AppInner() {
           onCloseSession={closeSession}
           onRenameSession={renameSession}
           onDeleteProject={deleteProject}
+          onShowSettings={() => setShowSettings(true)}
+          onShowShortcuts={() => setShowShortcutHelp(true)}
         />
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <SplitLayout />
         </div>
       </div>
       {/* Footer — full width below everything */}
-      <Footer onCycleLayout={cycleLayout} onShowShortcuts={() => setShowShortcutHelp(true)} onShowSettings={() => setShowSettings(true)} />
+      <Footer onCycleLayout={cycleLayout} />
       {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
       {showSettings && (
         <Settings
