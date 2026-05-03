@@ -134,9 +134,19 @@ function SessionCapacity({ sessions }: { sessions: SessionInfo[] }) {
 
   if (remaining === null) return null;
 
+  const bg = remaining > 40 ? '#30a46c' : remaining > 20 ? '#e5a100' : '#e5484d';
+
   return (
-    <span style={{ fontSize: 13, color: maxContext! > 80 ? theme.statusExited : theme.tabInactiveText }}>
-      {remaining.toFixed(0)}% session left
+    <span style={{
+      background: bg,
+      color: '#fff',
+      fontSize: 12,
+      fontFamily: 'system-ui',
+      fontWeight: 500,
+      padding: '4px 10px',
+      borderRadius: 5,
+    }}>
+      {remaining.toFixed(0)}% left
     </span>
   );
 }
