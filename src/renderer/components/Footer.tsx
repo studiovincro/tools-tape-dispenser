@@ -57,7 +57,7 @@ export function Footer({ onCycleLayout }: FooterProps) {
   }, []);
 
   const mainWidth = windowWidth - (sidebarCollapsed ? 0 : sidebarWidth + 6);
-  const maxCols = Math.max(1, Math.floor(mainWidth / settings.minPaneWidth));
+  const maxCols = Math.max(1, Math.floor(mainWidth / (settings?.minPaneWidth || 450)));
 
   return (
     <div

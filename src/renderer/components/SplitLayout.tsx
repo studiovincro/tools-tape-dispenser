@@ -170,7 +170,7 @@ export function SplitLayout() {
           width: '100%',
           height: '100%',
           display: 'grid',
-          ...getGridStyle(visibleSessionIds.length, containerWidth, settings.minPaneWidth),
+          ...getGridStyle(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450),
           gap: isMultiPane ? 2 : 0,
           background: isMultiPane ? theme.borderSubtle : theme.appBackground,
         }}
@@ -183,7 +183,7 @@ export function SplitLayout() {
             <PaneSlot
               key={`slot-${index}`}
               index={index}
-              spanFullWidth={index === visibleSessionIds.length - 1 && isLastPaneAlone(visibleSessionIds.length, containerWidth, settings.minPaneWidth)}
+              spanFullWidth={index === visibleSessionIds.length - 1 && isLastPaneAlone(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450)}
               isFocused={isFocused}
               isMultiPane={isMultiPane}
               paneColor={paneColor}
