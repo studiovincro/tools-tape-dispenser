@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron';
+import { execSync } from 'child_process';
 import path from 'path';
 import { PtyManager } from './pty-manager';
 import { registerIpcHandlers } from './ipc-handlers';
@@ -7,6 +8,15 @@ import { loadState } from './session-store';
 // Squirrel startup handler (Windows only — skip on macOS)
 try {
   if (require('electron-squirrel-startup')) app.quit();
+} catch {}
+
+// Fix PATH for packaged apps — Finder/Dock launch gives a minimal PATH
+// that won't include user-installed tools like claude, homebrew, nvm, etc.
+// Spawn a login shell to get the full PATH from shell profiles.
+try {
+  const shell = process.env.SHELL || '/bin/zsh';
+  const fullPath = execSync(`${shell} -ilc 'echo -n $PATH'`, { encoding: 'utf8', timeout: 5000 });
+  if (fullPath) process.env.PATH = fullPath;
 } catch {}
 
 const ptyManager = new PtyManager();
