@@ -34,6 +34,37 @@ export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
 
+  if (visibleSessionIds.length === 0) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          background: theme.appBackground,
+          userSelect: 'none',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 16,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            color: theme.buttonMuted,
+            background: theme.tabBarBackground,
+            padding: '8px 20px',
+            borderRadius: 8,
+          }}
+        >
+          No active sessions
+        </span>
+      </div>
+    );
+  }
+
   const focusPane = (id: string) => {
     if (isMultiPane) {
       dispatch({ type: 'SET_LAYOUT', mode: '1' });
