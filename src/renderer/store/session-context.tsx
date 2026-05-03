@@ -18,6 +18,7 @@ type Action =
   | { type: 'SET_ACTIVE'; id: string }
   | { type: 'SET_LAYOUT'; mode: LayoutMode }
   | { type: 'SET_VISIBLE'; ids: string[] }
+  | { type: 'SET_VISIBLE_SLOT'; index: number; sessionId: string }
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
   | { type: 'RESTORE'; state: AppState };
@@ -246,6 +247,17 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'SET_VISIBLE': {
       return { ...state, visibleSessionIds: action.ids };
+    }
+    case 'SET_VISIBLE_SLOT': {
+      const visible = [...state.visibleSessionIds];
+      // Remove the session from its current slot if it's already visible
+      const existingIdx = visible.indexOf(action.sessionId);
+      if (existingIdx !== -1 && existingIdx !== action.index) {
+        // Swap: put whatever was in the target slot into the old slot
+        visible[existingIdx] = visible[action.index];
+      }
+      visible[action.index] = action.sessionId;
+      return { ...state, visibleSessionIds: visible, activeSessionId: action.sessionId };
     }
     case 'UPDATE_STATUS': {
       const sessions = state.sessions.map((s) =>

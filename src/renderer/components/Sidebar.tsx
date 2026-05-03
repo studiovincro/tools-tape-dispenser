@@ -849,8 +849,8 @@ function DropZone({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       style={{
-        height: active ? 3 : 0,
-        margin: active ? '0 8px 0 36px' : 0,
+        height: active ? 3 : 4,
+        margin: active ? '0 8px 0 36px' : '0',
         borderRadius: 2,
         background: active ? theme.activeTabIndicator : 'transparent',
         transition: 'height 0.1s, background 0.1s',

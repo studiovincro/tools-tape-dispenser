@@ -96,20 +96,14 @@ export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
           const paneColor = theme.paneIndicatorColors[(session?.colorIndex ?? index) % theme.paneIndicatorColors.length];
           const isFocused = id === activeSessionId;
           return (
-            <div
+            <PaneSlot
               key={`slot-${index}`}
+              index={index}
+              isFocused={isFocused}
+              isMultiPane={isMultiPane}
+              paneColor={paneColor}
               onClick={() => { if (isMultiPane) dispatch({ type: 'SET_ACTIVE', id }); }}
-              style={{
-                overflow: 'hidden',
-                background: theme.appBackground,
-                display: 'flex',
-                flexDirection: 'column',
-                border: isMultiPane
-                  ? `2px solid ${isFocused ? paneColor : theme.borderSubtle}`
-                  : 'none',
-                borderRadius: isMultiPane ? 6 : 0,
-                transition: 'border-color 0.15s',
-              }}
+              onDrop={(sessionId) => dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId })}
             >
               {session && (
                 <PaneHeader
@@ -124,7 +118,7 @@ export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <TerminalPane sessionId={id} visible />
               </div>
-            </div>
+            </PaneSlot>
           );
         })}
       </div>
@@ -244,6 +238,55 @@ function PaneHeader({
           ×
         </span>
       )}
+    </div>
+  );
+}
+
+function PaneSlot({
+  index,
+  isFocused,
+  isMultiPane,
+  paneColor,
+  onClick,
+  onDrop,
+  children,
+}: {
+  index: number;
+  isFocused: boolean;
+  isMultiPane: boolean;
+  paneColor: string;
+  onClick: () => void;
+  onDrop: (sessionId: string) => void;
+  children: React.ReactNode;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+
+  return (
+    <div
+      onClick={onClick}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        const sessionId = e.dataTransfer.getData('text/session-id');
+        if (sessionId) onDrop(sessionId);
+      }}
+      style={{
+        overflow: 'hidden',
+        background: theme.appBackground,
+        display: 'flex',
+        flexDirection: 'column',
+        border: isMultiPane
+          ? `2px solid ${dragOver ? theme.activeTabIndicator : isFocused ? paneColor : theme.borderSubtle}`
+          : 'none',
+        borderRadius: isMultiPane ? 6 : 0,
+        outline: dragOver ? `2px dashed ${theme.activeTabIndicator}` : 'none',
+        outlineOffset: -4,
+        transition: 'border-color 0.15s',
+      }}
+    >
+      {children}
     </div>
   );
 }
