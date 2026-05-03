@@ -4,10 +4,10 @@ import { PtyManager } from './pty-manager';
 import { registerIpcHandlers } from './ipc-handlers';
 import { loadState } from './session-store';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
+// Squirrel startup handler (Windows only — skip on macOS)
+try {
+  if (require('electron-squirrel-startup')) app.quit();
+} catch {}
 
 const ptyManager = new PtyManager();
 registerIpcHandlers(ptyManager);

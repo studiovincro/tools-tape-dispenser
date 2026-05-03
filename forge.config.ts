@@ -4,6 +4,8 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -13,6 +15,19 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {
     onlyModules: ['node-pty'],
+  },
+  hooks: {
+    packageAfterCopy: async (_config, buildPath) => {
+      // Copy native/external modules into the packaged app's node_modules
+      const modules = ['node-pty', 'electron-squirrel-startup'];
+      for (const mod of modules) {
+        const src = path.resolve(__dirname, 'node_modules', mod);
+        const dest = path.join(buildPath, 'node_modules', mod);
+        if (fs.existsSync(src)) {
+          fs.cpSync(src, dest, { recursive: true });
+        }
+      }
+    },
   },
   makers: [
     new MakerZIP({}, ['darwin']),
