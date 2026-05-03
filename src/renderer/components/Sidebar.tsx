@@ -292,7 +292,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           }}
         >
           <SidebarPill onClick={onShowSettings} label="Settings" shortcut="," />
-          <SidebarPill onClick={onShowShortcuts} label="Shortcuts" shortcut="?" />
+          <SidebarPill onClick={onShowShortcuts} label="Help" shortcut="?" />
         </div>
       </div>
 
