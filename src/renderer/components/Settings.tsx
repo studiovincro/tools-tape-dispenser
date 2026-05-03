@@ -9,6 +9,18 @@ interface SettingsProps {
   onPickDirectory: () => Promise<string | null>;
 }
 
+function SettingsRow({ label, desc, children }: { label: string; desc: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontFamily: 'system-ui', color: theme.tabActiveText, fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: 12, fontFamily: 'system-ui', color: theme.tabInactiveText, marginTop: 2 }}>{desc}</div>
+      </div>
+      <div style={{ flexShrink: 0 }}>{children}</div>
+    </div>
+  );
+}
+
 export function Settings({ settings, onSave, onClose, onPickDirectory }: SettingsProps) {
   const [minPaneWidth, setMinPaneWidth] = useState(settings.minPaneWidth);
   const [terminalFontSize, setTerminalFontSize] = useState(settings.terminalFontSize);
@@ -80,13 +92,9 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
           Settings
         </h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Min pane width */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={labelStyle}>Min pane width</div>
-              <div style={descStyle}>Minimum width before panes wrap to a new row</div>
-            </div>
+          <SettingsRow label="Min pane width" desc="Minimum width before panes wrap to a new row">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input
                 type="number"
@@ -99,14 +107,10 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
               />
               <span style={{ fontSize: 13, color: theme.tabInactiveText }}>px</span>
             </div>
-          </div>
+          </SettingsRow>
 
           {/* Terminal font size */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={labelStyle}>Terminal font size</div>
-              <div style={descStyle}>Font size for all terminal panes</div>
-            </div>
+          <SettingsRow label="Terminal font size" desc="Font size for all terminal panes">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input
                 type="number"
@@ -119,14 +123,10 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
               />
               <span style={{ fontSize: 13, color: theme.tabInactiveText }}>px</span>
             </div>
-          </div>
+          </SettingsRow>
 
           {/* Default session type */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={labelStyle}>Default session type</div>
-              <div style={descStyle}>Type used when creating new sessions</div>
-            </div>
+          <SettingsRow label="Default session type" desc="Type used when creating new sessions">
             <div style={{ display: 'flex', background: theme.borderSubtle, borderRadius: 5, padding: 2, gap: 1 }}>
               {(['claude', 'terminal'] as const).map((t) => (
                 <button
@@ -149,7 +149,7 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
                 </button>
               ))}
             </div>
-          </div>
+          </SettingsRow>
 
           {/* Default project directory */}
           <div>
