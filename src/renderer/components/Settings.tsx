@@ -146,7 +146,7 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
           </SettingsRow>
 
           {/* Default project directory */}
-          <div style={{ padding: '14px 0', borderBottom: `1px solid ${theme.borderSubtle}` }}>
+          <div style={{ padding: '14px 0' }}>
             <div style={labelStyle}>Default project directory</div>
             <div style={descStyle}>Skip the directory picker when creating sessions</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
