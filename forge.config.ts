@@ -9,6 +9,7 @@ import * as path from 'path';
 
 const config: ForgeConfig = {
   packagerConfig: {
+    icon: path.resolve(__dirname, 'assets', 'icon'),
     asar: {
       unpack: '**/node_modules/node-pty/**',
     },
