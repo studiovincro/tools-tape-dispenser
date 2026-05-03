@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TerminalPane } from './TerminalPane';
 import { ContextMenu, type MenuItem } from './ContextMenu';
 import { useSessionState, useSessionDispatch } from '../store/session-context';
+import { disposeTerminal } from '../hooks/useTerminal';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
@@ -102,6 +103,7 @@ export function SplitLayout() {
         { label: 'Close Session', onClick: () => {
           if (window.confirm(`Close "${session.label}"?`)) {
             window.electronAPI.killSession(id);
+            disposeTerminal(id);
             dispatch({ type: 'REMOVE_SESSION', id });
           }
         }, danger: true },
@@ -208,9 +210,10 @@ export function SplitLayout() {
                       session: { ...result, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
                     });
                     dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
+                    disposeTerminal(id);
                     dispatch({ type: 'REMOVE_SESSION', id });
                   } : undefined}
-                  onClose={() => dispatch({ type: 'REMOVE_SESSION', id })}
+                  onClose={() => { disposeTerminal(id); dispatch({ type: 'REMOVE_SESSION', id }); }}
                 />
               </div>
             </PaneSlot>

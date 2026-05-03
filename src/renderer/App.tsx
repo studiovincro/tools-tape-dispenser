@@ -12,6 +12,7 @@ import { SplitLayout } from './components/SplitLayout';
 import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { ShortcutHelp } from './components/ShortcutHelp';
+import { disposeTerminal } from './hooks/useTerminal';
 import type { LayoutMode, SessionType, SessionFilter } from '../shared/types';
 import { theme } from './theme';
 
@@ -39,6 +40,7 @@ function AppInner() {
     const name = session?.label ?? 'this session';
     if (!window.confirm(`Close "${name}"?`)) return;
     await window.electronAPI.killSession(id);
+    disposeTerminal(id);
     dispatch({ type: 'REMOVE_SESSION', id });
   }, [dispatch, state.sessions]);
 
@@ -67,6 +69,7 @@ function AppInner() {
     if (!window.confirm(msg)) return;
     for (const s of sessionsToKill) {
       await window.electronAPI.killSession(s.id);
+      disposeTerminal(s.id);
     }
     dispatch({ type: 'REMOVE_PROJECT', projectId });
   }, [state.sessions, state.projects, dispatch]);
