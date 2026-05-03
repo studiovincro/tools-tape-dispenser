@@ -4,6 +4,7 @@ import {
   useSessionState,
   useSessionDispatch,
   getProjectSessions,
+  getFilteredProjectSessions,
   getAvailableLayouts,
   DEFAULT_PROJECT_ID,
 } from './store/session-context';
@@ -45,13 +46,15 @@ function AppInner() {
     dispatch({ type: 'RENAME_SESSION', id, label });
   }, [dispatch]);
 
+  const filteredSessions = getFilteredProjectSessions(state);
+
   const cycleLayout = useCallback(() => {
-    const available = getAvailableLayouts(projectSessions.length);
+    const available = getAvailableLayouts(filteredSessions.length);
     if (available.length <= 1) return;
     const idx = available.indexOf(state.layoutMode);
     const next = available[(idx + 1) % available.length];
     dispatch({ type: 'SET_LAYOUT', mode: next });
-  }, [state.layoutMode, projectSessions.length, dispatch]);
+  }, [state.layoutMode, filteredSessions.length, dispatch]);
 
   const deleteProject = useCallback(async (projectId: string) => {
     const project = state.projects.find((p) => p.id === projectId);

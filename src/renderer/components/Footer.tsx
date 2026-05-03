@@ -14,9 +14,9 @@ interface FooterProps {
   onShowShortcuts: () => void;
 }
 
-function LayoutIcon({ count }: { count: number }) {
-  // Draw a grid: 2 columns, ceil(count/2) rows, filled cells
-  const cols = count === 1 ? 1 : 2;
+function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
+  // Draw a grid matching the responsive layout
+  const cols = count === 1 ? 1 : Math.min(maxCols, count);
   const rows = Math.ceil(count / cols);
   const w = 18, h = 14;
   const gap = 1.5;
@@ -41,14 +41,21 @@ function LayoutIcon({ count }: { count: number }) {
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>{rects}</svg>;
 }
 
+const MIN_PANE_WIDTH = 420;
+
 export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
-  const { layoutMode, sessionFilter } = state;
+  const { layoutMode, sessionFilter, sidebarWidth, sidebarCollapsed } = state;
   const projectSessions = getProjectSessions(state);
   const filteredSessions = getFilteredProjectSessions(state);
   const showLayoutButton = filteredSessions.length > 0;
   const [layoutHovered, setLayoutHovered] = useState(false);
+  // Estimate main area width for the layout icon
+  const mainWidth = typeof window !== 'undefined'
+    ? window.innerWidth - (sidebarCollapsed ? 0 : sidebarWidth + 6)
+    : 1200;
+  const maxCols = Math.max(1, Math.floor(mainWidth / MIN_PANE_WIDTH));
 
   return (
     <div
@@ -119,7 +126,7 @@ export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
             }}
             title="Cycle layout (Cmd+\\)"
           >
-            <LayoutIcon count={state.visibleSessionIds.length || 1} />
+            <LayoutIcon count={state.visibleSessionIds.length || 1} maxCols={maxCols} />
             <span style={{ fontSize: 13 }}>{state.visibleSessionIds.length || 1} pane{(state.visibleSessionIds.length || 1) !== 1 ? 's' : ''}</span>
           </button>
         )}

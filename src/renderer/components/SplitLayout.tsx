@@ -1,15 +1,20 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TerminalPane } from './TerminalPane';
 import { ContextMenu, type MenuItem } from './ContextMenu';
 import { useSessionState, useSessionDispatch } from '../store/session-context';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
-function getGridStyle(paneCount: number): React.CSSProperties {
+const MIN_PANE_WIDTH = 420; // minimum width per pane in pixels
+
+function getGridStyle(paneCount: number, containerWidth: number): React.CSSProperties {
   if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
-  const rows = Math.ceil(paneCount / 2);
+  // Calculate how many columns fit at the minimum pane width
+  const maxCols = Math.max(1, Math.floor(containerWidth / MIN_PANE_WIDTH));
+  const cols = Math.min(maxCols, paneCount);
+  const rows = Math.ceil(paneCount / cols);
   return {
-    gridTemplateColumns: paneCount === 1 ? '1fr' : '1fr 1fr',
+    gridTemplateColumns: `repeat(${cols}, 1fr)`,
     gridTemplateRows: Array(rows).fill('1fr').join(' '),
   };
 }
@@ -31,6 +36,20 @@ export function SplitLayout() {
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(1200);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    setContainerWidth(containerRef.current.clientWidth);
+    return () => observer.disconnect();
+  }, []);
 
   const showPaneMenu = useCallback((e: React.MouseEvent, id: string, index: number) => {
     e.preventDefault();
@@ -132,6 +151,7 @@ export function SplitLayout() {
 
   return (
     <div
+      ref={containerRef}
       style={{
         width: '100%',
         height: '100%',
@@ -144,7 +164,7 @@ export function SplitLayout() {
           width: '100%',
           height: '100%',
           display: 'grid',
-          ...getGridStyle(visibleSessionIds.length),
+          ...getGridStyle(visibleSessionIds.length, containerWidth),
           gap: isMultiPane ? 2 : 0,
           background: isMultiPane ? theme.borderSubtle : theme.appBackground,
         }}
