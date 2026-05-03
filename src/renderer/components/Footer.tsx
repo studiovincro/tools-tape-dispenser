@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   useSessionState,
   useSessionDispatch,
@@ -8,6 +8,7 @@ import {
 } from '../store/session-context';
 import type { LayoutMode, SessionInfo, SessionFilter } from '../../shared/types';
 import { theme } from '../theme';
+import { MIN_PANE_WIDTH } from './SplitLayout';
 
 interface FooterProps {
   onCycleLayout: () => void;
@@ -41,8 +42,6 @@ function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>{rects}</svg>;
 }
 
-const MIN_PANE_WIDTH = 420;
-
 export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
@@ -51,10 +50,15 @@ export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
   const filteredSessions = getFilteredProjectSessions(state);
   const showLayoutButton = filteredSessions.length > 0;
   const [layoutHovered, setLayoutHovered] = useState(false);
-  // Estimate main area width for the layout icon
-  const mainWidth = typeof window !== 'undefined'
-    ? window.innerWidth - (sidebarCollapsed ? 0 : sidebarWidth + 6)
-    : 1200;
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handler = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const mainWidth = windowWidth - (sidebarCollapsed ? 0 : sidebarWidth + 6);
   const maxCols = Math.max(1, Math.floor(mainWidth / MIN_PANE_WIDTH));
 
   return (

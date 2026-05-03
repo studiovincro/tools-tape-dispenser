@@ -5,7 +5,7 @@ import { useSessionState, useSessionDispatch } from '../store/session-context';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
-const MIN_PANE_WIDTH = 420; // minimum width per pane in pixels
+export const MIN_PANE_WIDTH = 350; // minimum width per pane in pixels
 
 function getGridStyle(paneCount: number, containerWidth: number): React.CSSProperties {
   if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
