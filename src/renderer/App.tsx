@@ -181,6 +181,7 @@ function AppInner() {
             const result = await window.electronAPI.createSession(cwd, (sessionType as SessionType) || 'claude');
             dispatch({
               type: 'ADD_SESSION',
+              restoring: true,
               session: { ...result, label: label || result.label, status: 'running', projectId: projectId || DEFAULT_PROJECT_ID, contextPercent: null, createdAt: Date.now(), colorIndex: ci },
             });
             createdIds.push(result.id);

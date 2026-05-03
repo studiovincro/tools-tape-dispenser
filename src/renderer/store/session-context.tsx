@@ -11,7 +11,7 @@ type Action =
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'SET_SESSION_FILTER'; filter: SessionFilter }
   | { type: 'SET_SIDEBAR_WIDTH'; width: number }
-  | { type: 'ADD_SESSION'; session: SessionInfo }
+  | { type: 'ADD_SESSION'; session: SessionInfo; restoring?: boolean }
   | { type: 'REMOVE_SESSION'; id: string }
   | { type: 'RENAME_SESSION'; id: string; label: string }
   | { type: 'MOVE_SESSION'; sessionId: string; toProjectId: string; atIndex?: number }
@@ -206,6 +206,10 @@ function reducer(state: AppState, action: Action): AppState {
     case 'ADD_SESSION': {
       const sessions = [...state.sessions, action.session];
       const newState = { ...state, sessions, activeSessionId: action.session.id };
+      if (action.restoring) {
+        // During restore, just add the session without changing layout/visible
+        return newState;
+      }
       const filtered = getFilteredProjectSessions(newState);
       // Grow layout to include the new session, up to max 8
       const desiredPanes = Math.min(filtered.length, 8);
