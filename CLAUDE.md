@@ -98,6 +98,11 @@ yarn make        # Create distributable (dmg/zip)
 - Double-Shift: Open sidebar search
 - Esc: Close search/menus
 
+## Git
+
+- SSH keys are not configured; use `gh` CLI (HTTPS) for push/pull operations
+- Remote URL must be HTTPS format: `https://github.com/studiovincro/tools-multi-agent.git`
+
 ## Conventions
 
 - Use yarn, not npm
