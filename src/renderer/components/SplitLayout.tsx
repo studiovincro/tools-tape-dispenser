@@ -6,12 +6,9 @@ import { disposeTerminal } from '../hooks/useTerminal';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
-export const MIN_PANE_WIDTH = 450; // minimum width per pane in pixels
-
-function getGridStyle(paneCount: number, containerWidth: number): React.CSSProperties {
+function getGridStyle(paneCount: number, containerWidth: number, minPaneWidth: number): React.CSSProperties {
   if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
-  // Calculate how many columns fit at the minimum pane width
-  const maxCols = Math.max(1, Math.floor(containerWidth / MIN_PANE_WIDTH));
+  const maxCols = Math.max(1, Math.floor(containerWidth / minPaneWidth));
   const cols = Math.min(maxCols, paneCount);
   const rows = Math.ceil(paneCount / cols);
   return {
@@ -33,7 +30,7 @@ const statusLabels: Record<SessionInfo['status'], string> = {
 };
 
 export function SplitLayout() {
-  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId, sessionFilter } = useSessionState();
+  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId, sessionFilter, settings } = useSessionState();
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
@@ -166,7 +163,7 @@ export function SplitLayout() {
           width: '100%',
           height: '100%',
           display: 'grid',
-          ...getGridStyle(visibleSessionIds.length, containerWidth),
+          ...getGridStyle(visibleSessionIds.length, containerWidth, settings.minPaneWidth),
           gap: isMultiPane ? 2 : 0,
           background: isMultiPane ? theme.borderSubtle : theme.appBackground,
         }}
@@ -202,6 +199,7 @@ export function SplitLayout() {
                   visible
                   sessionType={session?.sessionType}
                   status={session?.status}
+                  fontSize={settings.terminalFontSize}
                   onRestart={session ? async () => {
                     const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
                     dispatch({
@@ -236,7 +234,7 @@ export function SplitLayout() {
               visibility: 'hidden',
             }}
           >
-            <TerminalPane sessionId={s.id} visible={false} sessionType={s.sessionType} />
+            <TerminalPane sessionId={s.id} visible={false} sessionType={s.sessionType} fontSize={settings.terminalFontSize} />
           </div>
         ))}
       {contextMenu && (

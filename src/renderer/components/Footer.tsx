@@ -8,11 +8,11 @@ import {
 } from '../store/session-context';
 import type { LayoutMode, SessionInfo, SessionFilter } from '../../shared/types';
 import { theme } from '../theme';
-import { MIN_PANE_WIDTH } from './SplitLayout';
 
 interface FooterProps {
   onCycleLayout: () => void;
   onShowShortcuts: () => void;
+  onShowSettings: () => void;
 }
 
 function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
@@ -42,10 +42,10 @@ function LayoutIcon({ count, maxCols }: { count: number; maxCols: number }) {
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>{rects}</svg>;
 }
 
-export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
+export function Footer({ onCycleLayout, onShowShortcuts, onShowSettings }: FooterProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
-  const { layoutMode, sessionFilter, sidebarWidth, sidebarCollapsed } = state;
+  const { layoutMode, sessionFilter, sidebarWidth, sidebarCollapsed, settings } = state;
   const projectSessions = getProjectSessions(state);
   const filteredSessions = getFilteredProjectSessions(state);
   const showLayoutButton = filteredSessions.length > 0;
@@ -59,7 +59,7 @@ export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
   }, []);
 
   const mainWidth = windowWidth - (sidebarCollapsed ? 0 : sidebarWidth + 6);
-  const maxCols = Math.max(1, Math.floor(mainWidth / MIN_PANE_WIDTH));
+  const maxCols = Math.max(1, Math.floor(mainWidth / settings.minPaneWidth));
 
   return (
     <div
@@ -95,6 +95,21 @@ export function Footer({ onCycleLayout, onShowShortcuts }: FooterProps) {
           }}
           onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })}
         />
+        <button
+          onClick={onShowSettings}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: theme.buttonMuted,
+            cursor: 'pointer',
+            fontSize: 16,
+            padding: '2px 6px',
+            borderRadius: 4,
+          }}
+          title="Settings (Cmd+,)"
+        >
+          ⚙
+        </button>
         <button
           onClick={onShowShortcuts}
           style={{

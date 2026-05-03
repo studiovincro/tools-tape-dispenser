@@ -27,6 +27,20 @@ export interface CreateSessionResult {
 export type LayoutMode = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8';
 export type SessionFilter = 'all' | 'claude' | 'terminal';
 
+export interface Settings {
+  minPaneWidth: number;
+  terminalFontSize: number;
+  defaultSessionType: SessionType;
+  defaultProjectDir: string;
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  minPaneWidth: 450,
+  terminalFontSize: 13,
+  defaultSessionType: 'claude',
+  defaultProjectDir: '',
+};
+
 export interface AppState {
   projects: Project[];
   activeProjectId: string;
@@ -37,4 +51,5 @@ export interface AppState {
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   sessionFilter: SessionFilter;
+  settings: Settings;
 }

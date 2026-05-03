@@ -67,6 +67,14 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
       sidebarWidth: typeof payload.sidebarWidth === 'number' ? payload.sidebarWidth : undefined,
       sessionFilter: typeof payload.sessionFilter === 'string' ? payload.sessionFilter : undefined,
       visibleSessionIndices: Array.isArray(payload.visibleSessionIndices) ? payload.visibleSessionIndices : undefined,
+      settings: payload.settings && typeof payload.settings === 'object'
+        ? {
+            minPaneWidth: Math.max(200, Math.min(1000, Number((payload.settings as any).minPaneWidth) || 450)),
+            terminalFontSize: Math.max(10, Math.min(24, Number((payload.settings as any).terminalFontSize) || 13)),
+            defaultSessionType: (payload.settings as any).defaultSessionType === 'terminal' ? 'terminal' : 'claude',
+            defaultProjectDir: typeof (payload.settings as any).defaultProjectDir === 'string' ? (payload.settings as any).defaultProjectDir : '',
+          }
+        : undefined,
       windowBounds: bounds,
     } as any);
   });

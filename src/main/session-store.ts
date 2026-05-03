@@ -9,6 +9,7 @@ interface PersistedState {
   sidebarWidth?: number;
   sessionFilter?: string;
   visibleSessionIndices?: number[];
+  settings?: { minPaneWidth: number; terminalFontSize: number; defaultSessionType: string; defaultProjectDir: string };
   windowBounds: { x: number; y: number; width: number; height: number } | null;
 }
 
@@ -36,6 +37,7 @@ export function saveState(state: Omit<PersistedState, 'windowBounds'> & { window
   if (state.sidebarWidth !== undefined) store.set('sidebarWidth', state.sidebarWidth);
   if (state.sessionFilter !== undefined) store.set('sessionFilter', state.sessionFilter);
   if (state.visibleSessionIndices !== undefined) store.set('visibleSessionIndices', state.visibleSessionIndices);
+  if (state.settings !== undefined) store.set('settings', state.settings);
   if (state.windowBounds !== undefined) store.set('windowBounds', state.windowBounds);
 }
 
@@ -49,6 +51,7 @@ export function loadState(): PersistedState {
     sidebarWidth: store.get('sidebarWidth'),
     sessionFilter: store.get('sessionFilter'),
     visibleSessionIndices: store.get('visibleSessionIndices'),
+    settings: store.get('settings'),
     windowBounds: store.get('windowBounds'),
   };
 }

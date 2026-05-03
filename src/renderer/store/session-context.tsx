@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, type Dispatch } from 'react';
-import type { AppState, SessionInfo, LayoutMode, Project, SessionFilter } from '../../shared/types';
+import type { AppState, SessionInfo, LayoutMode, Project, SessionFilter, Settings } from '../../shared/types';
+import { DEFAULT_SETTINGS } from '../../shared/types';
 
 const DEFAULT_PROJECT_ID = 'default';
 
@@ -23,7 +24,8 @@ type Action =
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
   | { type: 'RESTORE'; state: AppState }
-  | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null };
+  | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null }
+  | { type: 'SET_SETTINGS'; settings: Partial<Settings> };
 
 const initialState: AppState = {
   projects: [{ id: DEFAULT_PROJECT_ID, name: 'General' }],
@@ -35,6 +37,7 @@ const initialState: AppState = {
   sidebarCollapsed: false,
   sidebarWidth: 240,
   sessionFilter: 'all',
+  settings: DEFAULT_SETTINGS,
 };
 
 // Helper: get sessions for a specific project
@@ -315,6 +318,9 @@ function reducer(state: AppState, action: Action): AppState {
         visibleSessionIds: action.visibleSessionIds,
         activeSessionId: action.activeSessionId,
       };
+    }
+    case 'SET_SETTINGS': {
+      return { ...state, settings: { ...state.settings, ...action.settings } };
     }
     default:
       return state;

@@ -30,7 +30,7 @@ export function disposeTerminal(sessionId: string): void {
   }
 }
 
-export function useTerminal(sessionId: string | null, visible: boolean = true, sessionType: string = 'claude') {
+export function useTerminal(sessionId: string | null, visible: boolean = true, sessionType: string = 'claude', fontSize: number = 13) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
@@ -51,7 +51,7 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       // Create new terminal
       const terminal = new Terminal({
         cursorBlink: true,
-        fontSize: 13,
+        fontSize,
         fontFamily: 'Menlo, Monaco, "Courier New", monospace',
         theme: {
           background: theme.terminal.background,
@@ -121,6 +121,16 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       }
     };
   }, [sessionId]);
+
+  // Update font size on existing terminals when settings change
+  useEffect(() => {
+    if (!sessionId) return;
+    const entry = registry.get(sessionId);
+    if (entry) {
+      entry.terminal.options.fontSize = fontSize;
+      try { entry.fitAddon.fit(); } catch {}
+    }
+  }, [sessionId, fontSize]);
 
   // Refit when becoming visible (e.g. tab switch or layout change)
   useEffect(() => {

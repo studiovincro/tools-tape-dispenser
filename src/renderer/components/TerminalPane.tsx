@@ -7,12 +7,13 @@ interface TerminalPaneProps {
   visible?: boolean;
   sessionType?: string;
   status?: string;
+  fontSize?: number;
   onRestart?: () => void;
   onClose?: () => void;
 }
 
-export function TerminalPane({ sessionId, visible = true, sessionType = 'claude', status, onRestart, onClose }: TerminalPaneProps) {
-  const { containerRef } = useTerminal(sessionId, visible, sessionType);
+export function TerminalPane({ sessionId, visible = true, sessionType = 'claude', status, fontSize = 13, onRestart, onClose }: TerminalPaneProps) {
+  const { containerRef } = useTerminal(sessionId, visible, sessionType, fontSize);
   const isExited = status === 'exited';
 
   return (

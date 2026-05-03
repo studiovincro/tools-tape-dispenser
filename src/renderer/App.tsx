@@ -12,8 +12,10 @@ import { SplitLayout } from './components/SplitLayout';
 import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { ShortcutHelp } from './components/ShortcutHelp';
+import { Settings } from './components/Settings';
 import { disposeTerminal } from './hooks/useTerminal';
 import type { LayoutMode, SessionType, SessionFilter } from '../shared/types';
+import { DEFAULT_SETTINGS } from '../shared/types';
 import { theme } from './theme';
 
 function AppInner() {
@@ -22,18 +24,23 @@ function AppInner() {
   const idleTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const colorCounter = useRef(0);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const projectSessions = getProjectSessions(state);
 
-  const addSession = useCallback(async (sessionType: SessionType = 'claude') => {
-    const cwd = await window.electronAPI.pickDirectory();
-    if (!cwd) return;
-    const result = await window.electronAPI.createSession(cwd, sessionType);
+  const addSession = useCallback(async (sessionType?: SessionType) => {
+    const type = sessionType ?? state.settings.defaultSessionType;
+    let cwd = state.settings.defaultProjectDir || null;
+    if (!cwd) {
+      cwd = await window.electronAPI.pickDirectory();
+      if (!cwd) return;
+    }
+    const result = await window.electronAPI.createSession(cwd, type);
     dispatch({
       type: 'ADD_SESSION',
       session: { ...result, status: 'running', projectId: state.activeProjectId, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
     });
-  }, [dispatch, state.activeProjectId]);
+  }, [dispatch, state.activeProjectId, state.settings.defaultSessionType, state.settings.defaultProjectDir]);
 
   const closeSession = useCallback(async (id: string) => {
     const session = state.sessions.find((s) => s.id === id);
@@ -126,9 +133,15 @@ function AppInner() {
       } else if (meta && e.key === 'n') {
         e.preventDefault();
         addSession('claude');
+      } else if (meta && e.key === ',') {
+        e.preventDefault();
+        setShowSettings((v) => !v);
       } else if (meta && e.key === '?') {
         e.preventDefault();
         setShowShortcutHelp((v) => !v);
+      } else if (e.key === 'Escape' && showSettings) {
+        e.preventDefault();
+        setShowSettings(false);
       } else if (e.key === 'Escape' && showShortcutHelp) {
         e.preventDefault();
         setShowShortcutHelp(false);
@@ -162,7 +175,7 @@ function AppInner() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [state.activeSessionId, projectSessions, state.layoutMode, addSession, closeSession, cycleLayout, dispatch, showShortcutHelp]);
+  }, [state.activeSessionId, projectSessions, state.layoutMode, addSession, closeSession, cycleLayout, dispatch, showShortcutHelp, showSettings]);
 
   // Restore sessions on launch, or create a default one
   useEffect(() => {
@@ -212,6 +225,9 @@ function AppInner() {
             visibleSessionIds: restoreVisible,
             activeSessionId: restoreVisible.length > 0 ? restoreVisible[0] : null,
           });
+          if (persisted.settings) {
+            dispatch({ type: 'SET_SETTINGS', settings: { ...DEFAULT_SETTINGS, ...persisted.settings } });
+          }
         } else if (persisted.sessions && persisted.sessions.length > 0) {
           for (const { cwd } of persisted.sessions) {
             const result = await window.electronAPI.createSession(cwd);
@@ -248,13 +264,14 @@ function AppInner() {
         sidebarCollapsed: state.sidebarCollapsed,
         sidebarWidth: state.sidebarWidth,
         sessionFilter: state.sessionFilter,
+        settings: state.settings,
         // Save visible pane order as session indices within the full session list
         visibleSessionIndices: state.visibleSessionIds.map((id) => state.sessions.findIndex((s) => s.id === id)).filter((i) => i !== -1),
       });
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [state.projects, state.activeProjectId, state.sessions, state.layoutMode, state.sidebarCollapsed, state.sidebarWidth]);
+  }, [state.projects, state.activeProjectId, state.sessions, state.layoutMode, state.sidebarCollapsed, state.sidebarWidth, state.settings]);
 
   return (
     <div
@@ -289,8 +306,16 @@ function AppInner() {
         </div>
       </div>
       {/* Footer — full width below everything */}
-      <Footer onCycleLayout={cycleLayout} onShowShortcuts={() => setShowShortcutHelp(true)} />
+      <Footer onCycleLayout={cycleLayout} onShowShortcuts={() => setShowShortcutHelp(true)} onShowSettings={() => setShowSettings(true)} />
       {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
+      {showSettings && (
+        <Settings
+          settings={state.settings}
+          onSave={(s) => dispatch({ type: 'SET_SETTINGS', settings: s })}
+          onClose={() => setShowSettings(false)}
+          onPickDirectory={() => window.electronAPI.pickDirectory()}
+        />
+      )}
     </div>
   );
 }
