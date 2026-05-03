@@ -11,7 +11,7 @@ interface SettingsProps {
 
 function SettingsRow({ label, desc, children }: { label: string; desc: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontFamily: 'system-ui', color: theme.tabActiveText, fontWeight: 500 }}>{label}</div>
         <div style={{ fontSize: 12, fontFamily: 'system-ui', color: theme.tabInactiveText, marginTop: 2 }}>{desc}</div>
@@ -94,35 +94,29 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Min pane width */}
-          <SettingsRow label="Min pane width" desc="Minimum width before panes wrap to a new row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                type="number"
-                min={200}
-                max={1000}
-                step={50}
-                value={minPaneWidth}
-                onChange={(e) => setMinPaneWidth(Math.max(200, Math.min(1000, Number(e.target.value) || 450)))}
-                style={inputStyle}
-              />
-              <span style={{ fontSize: 13, color: theme.tabInactiveText }}>px</span>
-            </div>
+          <SettingsRow label="Min pane width (px)" desc="Minimum width before panes wrap to a new row">
+            <input
+              type="number"
+              min={200}
+              max={1000}
+              step={50}
+              value={minPaneWidth}
+              onChange={(e) => setMinPaneWidth(Math.max(200, Math.min(1000, Number(e.target.value) || 450)))}
+              style={inputStyle}
+            />
           </SettingsRow>
 
           {/* Terminal font size */}
-          <SettingsRow label="Terminal font size" desc="Font size for all terminal panes">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                type="number"
-                min={10}
-                max={24}
-                step={1}
-                value={terminalFontSize}
-                onChange={(e) => setTerminalFontSize(Math.max(10, Math.min(24, Number(e.target.value) || 13)))}
-                style={inputStyle}
-              />
-              <span style={{ fontSize: 13, color: theme.tabInactiveText }}>px</span>
-            </div>
+          <SettingsRow label="Terminal font size (px)" desc="Font size for all terminal panes">
+            <input
+              type="number"
+              min={10}
+              max={24}
+              step={1}
+              value={terminalFontSize}
+              onChange={(e) => setTerminalFontSize(Math.max(10, Math.min(24, Number(e.target.value) || 13)))}
+              style={inputStyle}
+            />
           </SettingsRow>
 
           {/* Default session type */}
