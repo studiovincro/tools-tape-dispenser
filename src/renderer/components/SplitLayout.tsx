@@ -30,7 +30,7 @@ interface SplitLayoutProps {
 }
 
 export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
-  const { sessions, visibleSessionIds, layoutMode, projects } = useSessionState();
+  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId } = useSessionState();
   const dispatch = useSessionDispatch();
   const isMultiPane = visibleSessionIds.length > 1;
 
@@ -63,16 +63,21 @@ export function SplitLayout({ onCloseSession }: SplitLayoutProps) {
         {visibleSessionIds.map((id, index) => {
           const session = sessions.find((s) => s.id === id);
           const paneColor = theme.paneIndicatorColors[(session?.colorIndex ?? index) % theme.paneIndicatorColors.length];
+          const isFocused = id === activeSessionId;
           return (
             <div
               key={`slot-${index}`}
+              onClick={() => { if (isMultiPane) dispatch({ type: 'SET_ACTIVE', id }); }}
               style={{
                 overflow: 'hidden',
                 background: theme.appBackground,
                 display: 'flex',
                 flexDirection: 'column',
-                border: isMultiPane ? `2px solid ${theme.borderSubtle}` : 'none',
+                border: isMultiPane
+                  ? `2px solid ${isFocused ? paneColor : theme.borderSubtle}`
+                  : 'none',
                 borderRadius: isMultiPane ? 6 : 0,
+                transition: 'border-color 0.15s',
               }}
             >
               {session && (
