@@ -43,6 +43,11 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       try { fitAddon.fit(); } catch {}
     });
 
+    // Replay buffered output (restores content after project move or layout change)
+    window.electronAPI.getSessionBuffer(sessionId).then((buffer) => {
+      if (buffer) terminal.write(buffer);
+    }).catch(() => {});
+
     // Wire keystrokes to pty
     const onDataDisposable = terminal.onData((data) => {
       window.electronAPI.writeSession(sessionId, data);

@@ -8,9 +8,12 @@ import type { CreateSessionResult } from '../shared/types';
 
 export type SessionType = 'claude' | 'terminal';
 
+const MAX_BUFFER_SIZE = 128 * 1024; // 128KB scrollback buffer per session
+
 interface ManagedSession {
   pty: pty.IPty;
   cwd: string;
+  outputBuffer: string;
 }
 
 // Environment variables safe to pass through to spawned sessions.
@@ -77,7 +80,14 @@ export class PtyManager {
       env: buildPtyEnv(),
     });
 
+    const managed: ManagedSession = { pty: shell, cwd: resolved, outputBuffer: '' };
+
     shell.onData((data: string) => {
+      // Buffer output for replay when terminal reconnects (e.g. after project move)
+      managed.outputBuffer += data;
+      if (managed.outputBuffer.length > MAX_BUFFER_SIZE) {
+        managed.outputBuffer = managed.outputBuffer.slice(-MAX_BUFFER_SIZE);
+      }
       if (this.win && !this.win.isDestroyed()) {
         this.win.webContents.send('pty:data', id, data);
       }
@@ -90,7 +100,7 @@ export class PtyManager {
       this.sessions.delete(id);
     });
 
-    this.sessions.set(id, { pty: shell, cwd: resolved });
+    this.sessions.set(id, managed);
 
     return {
       id,
@@ -102,6 +112,10 @@ export class PtyManager {
 
   hasSession(id: string): boolean {
     return this.sessions.has(id);
+  }
+
+  getBuffer(id: string): string {
+    return this.sessions.get(id)?.outputBuffer ?? '';
   }
 
   writeToSession(id: string, data: string): void {
