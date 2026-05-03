@@ -365,7 +365,7 @@ export function SessionTimer() {
           transition: 'background 0.12s',
         }}
       >
-        {isRunning ? formatTimeLeft(timeLeft) : isExpired ? 'Reset due' : 'Timer'}
+        {isRunning ? formatTimeLeft(timeLeft) : isExpired ? 'Reset due' : '0:00:00'}
       </button>
 
       {menuOpen && (
