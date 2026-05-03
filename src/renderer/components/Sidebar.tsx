@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { ContextMenu, type MenuItem } from './ContextMenu';
 import {
   useSessionState,
   useSessionDispatch,
@@ -25,6 +26,44 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds } = state;
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+
+  const showProjectMenu = (e: React.MouseEvent, projectId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { label: 'Rename', onClick: () => setEditingProjectId(projectId) },
+        { label: 'Add Claude Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('claude'); } },
+        { label: 'Add Terminal Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('terminal'); } },
+        ...(projects.length > 1 ? [{ label: 'Delete Project', onClick: () => onDeleteProject(projectId), danger: true }] : []),
+      ],
+    });
+  };
+
+  const showSessionMenu = (e: React.MouseEvent, sessionId: string) => {
+    e.preventDefault();
+    const session = state.sessions.find((s) => s.id === sessionId);
+    if (!session) return;
+    const otherProjects = projects.filter((p) => p.id !== session.projectId);
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { label: 'Rename', onClick: () => setEditingSessionId(sessionId) },
+        ...(otherProjects.length > 0 ? [{
+          label: 'Move to Project',
+          onClick: () => {},
+          submenu: otherProjects.map((p) => ({
+            label: p.name,
+            onClick: () => dispatch({ type: 'MOVE_SESSION', sessionId, toProjectId: p.id }),
+          })),
+        }] : []),
+        { label: 'Close Session', onClick: () => onCloseSession(sessionId), danger: true },
+      ],
+    });
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row', flexShrink: 0 }}>
@@ -114,6 +153,11 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                 onDelete={() => onDeleteProject(project.id)}
                 onCloseSession={onCloseSession}
                 onRenameSession={onRenameSession}
+                onProjectContextMenu={(e) => showProjectMenu(e, project.id)}
+                onSessionContextMenu={(e, id) => showSessionMenu(e, id)}
+                editingProjectId={editingProjectId}
+                editingSessionId={editingSessionId}
+                onEditingDone={() => { setEditingProjectId(null); setEditingSessionId(null); }}
                 canDelete={projects.length > 1}
               />
             );
@@ -124,6 +168,14 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
 
       {/* Draggable divider */}
       <DragDivider />
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
@@ -188,6 +240,11 @@ function ProjectTree({
   onDelete,
   onCloseSession,
   onRenameSession,
+  onProjectContextMenu,
+  onSessionContextMenu,
+  editingProjectId,
+  editingSessionId,
+  onEditingDone,
   canDelete,
 }: {
   project: { id: string; name: string };
@@ -201,6 +258,11 @@ function ProjectTree({
   onRenameSession: (id: string, label: string) => void;
   onDelete: () => void;
   onCloseSession: (id: string) => void;
+  onProjectContextMenu: (e: React.MouseEvent) => void;
+  onSessionContextMenu: (e: React.MouseEvent, id: string) => void;
+  editingProjectId: string | null;
+  editingSessionId: string | null;
+  onEditingDone: () => void;
   canDelete: boolean;
 }) {
   const dispatch = useSessionDispatch();
@@ -210,6 +272,14 @@ function ProjectTree({
   const [dragOver, setDragOver] = useState(false);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Trigger editing from context menu
+  useEffect(() => {
+    if (editingProjectId === project.id) {
+      setEditing(true);
+      onEditingDone();
+    }
+  }, [editingProjectId]);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -250,6 +320,7 @@ function ProjectTree({
       {/* Project header — drop target */}
       <div
         onClick={() => { onSelectProject(); setExpanded(true); }}
+        onContextMenu={onProjectContextMenu}
         onDoubleClick={() => setEditing(true)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -382,6 +453,9 @@ function ProjectTree({
                   onSelect={() => onSelectSession(session.id)}
                   onClose={() => onCloseSession(session.id)}
                   onRename={(label) => onRenameSession(session.id, label)}
+                  onContextMenu={(e) => onSessionContextMenu(e, session.id)}
+                  editingSessionId={editingSessionId}
+                  onEditingDone={onEditingDone}
                 />
               </React.Fragment>
             );
@@ -407,6 +481,9 @@ function SessionItem({
   onSelect,
   onClose,
   onRename,
+  onContextMenu,
+  editingSessionId,
+  onEditingDone,
 }: {
   session: SessionInfo;
   isActive: boolean;
@@ -415,10 +492,21 @@ function SessionItem({
   onSelect: () => void;
   onClose: () => void;
   onRename: (label: string) => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+  editingSessionId: string | null;
+  onEditingDone: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Trigger editing from context menu
+  useEffect(() => {
+    if (editingSessionId === session.id) {
+      setEditing(true);
+      onEditingDone();
+    }
+  }, [editingSessionId]);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -441,6 +529,7 @@ function SessionItem({
         e.dataTransfer.effectAllowed = 'move';
       }}
       onClick={onSelect}
+      onContextMenu={onContextMenu}
       onDoubleClick={() => setEditing(true)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
