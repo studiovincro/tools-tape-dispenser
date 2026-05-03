@@ -29,6 +29,27 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const lastShiftTime = useRef(0);
+
+  // Double-shift to open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && !e.repeat) {
+        const now = Date.now();
+        if (now - lastShiftTime.current < 400) {
+          setSearchOpen(true);
+          lastShiftTime.current = 0;
+        } else {
+          lastShiftTime.current = now;
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const showProjectMenu = (e: React.MouseEvent, projectId: string) => {
     e.preventDefault();
@@ -77,7 +98,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           userSelect: 'none',
         }}
       >
-        {/* Header */}
+        {/* Header — toggles between PROJECTS and search input */}
         <div
           style={{
             height: 37,
@@ -85,47 +106,92 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             boxSizing: 'border-box',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             padding: '0 12px',
             borderBottom: `1px solid ${theme.borderSubtle}`,
             flexShrink: 0,
+            gap: 6,
+            background: searchOpen ? theme.tabActiveBackground : 'transparent',
           }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: theme.tabInactiveText,
-              fontFamily: 'system-ui',
-              flex: 1,
-            }}
-          >
-            Projects
-          </span>
-          <button
-            onClick={() => {
-              const existingCount = projects.filter((p) => p.name.startsWith('New Project')).length;
-              const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
-              dispatch({
-                type: 'ADD_PROJECT',
-                project: { id: randomId(), name },
-              });
-            }}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: theme.buttonMuted,
-              cursor: 'pointer',
-              fontSize: 18,
-              padding: '0 4px',
-              lineHeight: 1,
-            }}
-            title="New project"
-          >
-            +
-          </button>
+          {searchOpen ? (
+            <>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); }
+                }}
+                autoFocus
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: 14,
+                  fontFamily: 'system-ui',
+                  background: 'transparent',
+                  color: theme.tabActiveText,
+                  padding: 0,
+                }}
+              />
+              {searchQuery && (
+                <span
+                  onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+                  style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
+                >
+                  ×
+                </span>
+              )}
+              <span
+                onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 12, fontFamily: 'system-ui' }}
+              >
+                Esc
+              </span>
+            </>
+          ) : (
+            <>
+              <span
+                onClick={() => setSearchOpen(true)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  color: theme.tabInactiveText,
+                  fontFamily: 'system-ui',
+                  flex: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                Projects
+              </span>
+              <button
+                onClick={() => {
+                  const existingCount = projects.filter((p) => p.name.startsWith('New Project')).length;
+                  const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
+                  dispatch({
+                    type: 'ADD_PROJECT',
+                    project: { id: randomId(), name },
+                  });
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: theme.buttonMuted,
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  padding: '0 4px',
+                  lineHeight: 1,
+                }}
+                title="New project"
+              >
+                +
+              </button>
+            </>
+          )}
         </div>
 
         {/* New Session bar with dropdown */}
@@ -134,7 +200,12 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
         {/* Project tree */}
         <div style={{ flex: 1, overflow: 'auto', padding: 0 }}>
           {projects.map((project) => {
-            const sessions = getProjectSessions(state, project.id);
+            const allSessions = getProjectSessions(state, project.id);
+            const query = searchQuery.toLowerCase();
+            const sessions = query
+              ? allSessions.filter((s) => s.label.toLowerCase().includes(query) || project.name.toLowerCase().includes(query))
+              : allSessions;
+            if (query && sessions.length === 0 && !project.name.toLowerCase().includes(query)) return null;
             const isActive = project.id === activeProjectId;
             return (
               <ProjectTree
