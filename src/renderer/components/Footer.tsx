@@ -343,31 +343,33 @@ function TimerMenuItem({ label, onClick, danger }: { label: string; onClick: () 
   );
 }
 
+function getNextRenewalDays(startDate: string): number {
+  const start = new Date(startDate);
+  const now = new Date();
+  const renewalDay = start.getDate();
+
+  // Try this month's anniversary
+  let next = new Date(now.getFullYear(), now.getMonth(), renewalDay);
+  // If today is past it, move to next month
+  if (next <= now) {
+    next = new Date(now.getFullYear(), now.getMonth() + 1, renewalDay);
+  }
+  // Handle months where renewalDay exceeds month length (e.g. 31st in Feb)
+  if (next.getDate() !== renewalDay) {
+    next = new Date(now.getFullYear(), now.getMonth() + 1, 0); // last day of prev month
+    if (next <= now) {
+      next = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    }
+  }
+
+  return Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function SubscriptionPill({ endDate }: { endDate: string }) {
   if (!endDate) return null;
 
-  const end = new Date(endDate + 'T23:59:59');
-  const now = new Date();
-  const diffMs = end.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 0) {
-    return (
-      <span style={{
-        background: '#e5484d',
-        color: '#fff',
-        fontSize: 12,
-        fontFamily: 'system-ui',
-        fontWeight: 500,
-        padding: '4px 10px',
-        borderRadius: 5,
-      }}>
-        Expired
-      </span>
-    );
-  }
-
-  const bg = diffDays <= 3 ? '#e5484d' : diffDays <= 7 ? '#e5a100' : '#30a46c';
+  const daysLeft = getNextRenewalDays(endDate);
+  const bg = daysLeft <= 3 ? '#e5484d' : daysLeft <= 7 ? '#e5a100' : '#30a46c';
 
   return (
     <span style={{
@@ -379,7 +381,7 @@ function SubscriptionPill({ endDate }: { endDate: string }) {
       padding: '4px 10px',
       borderRadius: 5,
     }}>
-      {diffDays}d left
+      {daysLeft}d to renewal
     </span>
   );
 }

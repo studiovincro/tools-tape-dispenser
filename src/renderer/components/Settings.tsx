@@ -200,7 +200,7 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
           </div>
 
           {/* Subscription end date */}
-          <SettingsRow label="Subscription end date" desc="Track when your subscription renews">
+          <SettingsRow label="Subscription start date" desc="Monthly renewal date for your subscription">
             <input
               type="date"
               value={subscriptionEndDate}
