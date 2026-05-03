@@ -80,9 +80,11 @@ export function Footer({ onCycleLayout }: FooterProps) {
       {/* Left: session counts + capacity */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <SessionStats sessions={state.sessions} />
+        {divider('timer-div')}
+        <SessionTimer />
       </div>
 
-      {/* Right: shortcuts + layout toggle */}
+      {/* Right: filter + layout toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <FilterToggle
           value={sessionFilter}
@@ -269,6 +271,153 @@ function FilterToggle({ value, counts, onChange }: { value: SessionFilter; count
           </button>
         );
       })}
+    </div>
+  );
+}
+
+const TIMER_OPTIONS = [
+  { label: '30m', minutes: 30 },
+  { label: '1h', minutes: 60 },
+  { label: '1.5h', minutes: 90 },
+  { label: '2h', minutes: 120 },
+  { label: '2.5h', minutes: 150 },
+  { label: '3h', minutes: 180 },
+  { label: '3.5h', minutes: 210 },
+  { label: '4h', minutes: 240 },
+  { label: '4.5h', minutes: 270 },
+  { label: '5h', minutes: 300 },
+];
+
+function formatTimeLeft(ms: number): string {
+  if (ms <= 0) return '0:00';
+  const totalSec = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function SessionTimer() {
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Tick every second
+  useEffect(() => {
+    if (endTime === null) return;
+    const tick = () => {
+      const left = endTime - Date.now();
+      setTimeLeft(Math.max(0, left));
+      if (left <= 0) setEndTime(null);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [endTime]);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  const isRunning = endTime !== null && timeLeft > 0;
+  const isExpired = endTime !== null && timeLeft <= 0;
+
+  const startTimer = (minutes: number) => {
+    setEndTime(Date.now() + minutes * 60 * 1000);
+    setMenuOpen(false);
+  };
+
+  const stopTimer = () => {
+    setEndTime(null);
+    setTimeLeft(0);
+    setMenuOpen(false);
+  };
+
+  const timerColor = !isRunning ? theme.tabInactiveText
+    : timeLeft < 2 * 60 * 1000 ? theme.statusExited
+    : timeLeft < 10 * 60 * 1000 ? '#c87800'
+    : theme.tabInactiveText;
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        style={{
+          background: isExpired ? `${theme.statusExited}18` : 'transparent',
+          border: 'none',
+          color: isExpired ? theme.statusExited : timerColor,
+          cursor: 'pointer',
+          fontSize: 13,
+          fontFamily: 'system-ui',
+          fontVariantNumeric: 'tabular-nums',
+          padding: '2px 8px',
+          borderRadius: 4,
+          fontWeight: isRunning ? 500 : 400,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+        }}
+      >
+        {isRunning ? formatTimeLeft(timeLeft) : isExpired ? 'Reset due' : 'Timer'}
+      </button>
+
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: 0,
+            marginBottom: 6,
+            background: theme.tabActiveBackground,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            overflow: 'hidden',
+            minWidth: 120,
+            zIndex: 100,
+          }}
+        >
+          {isRunning && (
+            <TimerMenuItem label="Stop timer" onClick={stopTimer} danger />
+          )}
+          {TIMER_OPTIONS.map((opt) => (
+            <TimerMenuItem
+              key={opt.minutes}
+              label={opt.label}
+              onClick={() => startTimer(opt.minutes)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimerMenuItem({ label, onClick, danger }: { label: string; onClick: () => void; danger?: boolean }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '7px 14px',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontFamily: 'system-ui',
+        color: danger ? theme.statusExited : theme.tabActiveText,
+        background: hovered ? theme.tabHoverBackground : 'transparent',
+      }}
+    >
+      {label}
     </div>
   );
 }
