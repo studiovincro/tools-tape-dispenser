@@ -226,19 +226,23 @@ function reducer(state: AppState, action: Action): AppState {
     case 'REMOVE_SESSION': {
       const sessions = state.sessions.filter((s) => s.id !== action.id);
       const newState = { ...state, sessions };
-      const projectSessions = getProjectSessions(newState);
-      const layoutMode = clampLayout(state.layoutMode, projectSessions.length);
-      const visibleSessionIds = state.visibleSessionIds.filter((id) => id !== action.id);
+      const filtered = getFilteredProjectSessions(newState);
+      // Remove from visible and shrink layout
+      const visible = state.visibleSessionIds.filter((id) => id !== action.id);
+      // If visible is empty but we have sessions, show one
+      if (visible.length === 0 && filtered.length > 0) {
+        visible.push(filtered[0].id);
+      }
+      const layoutMode = String(Math.max(visible.length, filtered.length > 0 ? 1 : 0) || 1) as LayoutMode;
       let activeSessionId = state.activeSessionId;
       if (activeSessionId === action.id) {
-        activeSessionId = projectSessions.length > 0 ? projectSessions[projectSessions.length - 1].id : null;
+        activeSessionId = visible.length > 0 ? visible[0] : null;
       }
-      if (visibleSessionIds.length === 0 && activeSessionId) {
-        visibleSessionIds.push(activeSessionId);
-      }
-      return { ...newState, sessions, activeSessionId, visibleSessionIds, layoutMode };
+      return { ...newState, sessions, activeSessionId, visibleSessionIds: visible, layoutMode };
     }
     case 'SET_ACTIVE': {
+      // Ignore if session doesn't exist (e.g. removed session via bubbled click)
+      if (!state.sessions.some((s) => s.id === action.id)) return state;
       const visibleSessionIds = state.layoutMode === '1'
         ? [action.id]
         : state.visibleSessionIds.includes(action.id)

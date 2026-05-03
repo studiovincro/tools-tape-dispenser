@@ -63,7 +63,7 @@ export function TerminalPane({ sessionId, visible = true, sessionType = 'claude'
           <div style={{ display: 'flex', gap: 8 }}>
             {onRestart && (
               <button
-                onClick={onRestart}
+                onClick={(e) => { e.stopPropagation(); onRestart(); }}
                 style={{
                   background: theme.activeTabIndicator,
                   border: 'none',
@@ -80,7 +80,7 @@ export function TerminalPane({ sessionId, visible = true, sessionType = 'claude'
             )}
             {onClose && (
               <button
-                onClick={onClose}
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
                 style={{
                   background: theme.borderSubtle,
                   border: 'none',

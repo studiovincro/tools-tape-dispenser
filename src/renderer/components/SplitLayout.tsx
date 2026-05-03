@@ -182,12 +182,13 @@ export function SplitLayout() {
                     const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
                     dispatch({
                       type: 'ADD_SESSION',
+                      restoring: true,
                       session: { ...result, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
                     });
                     dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
                     dispatch({ type: 'REMOVE_SESSION', id });
                   } : undefined}
-                  onClose={() => dispatch({ type: 'REMOVE_FROM_STAGE', id })}
+                  onClose={() => dispatch({ type: 'REMOVE_SESSION', id })}
                 />
               </div>
             </PaneSlot>
