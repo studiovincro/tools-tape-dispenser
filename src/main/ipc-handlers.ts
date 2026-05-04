@@ -46,14 +46,12 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
       console.warn('store:save: invalid payload shape');
       return;
     }
-    if (typeof payload.activeProjectId !== 'string' || typeof payload.layoutMode !== 'string') {
-      console.warn('store:save: invalid payload types');
+    if (typeof payload.activeProjectId !== 'string') {
+      console.warn('store:save: invalid activeProjectId', typeof payload.activeProjectId);
       return;
     }
-    if (!/^[1-8]$/.test(payload.layoutMode)) {
-      console.warn('store:save: invalid layoutMode');
-      return;
-    }
+    const layoutMode = typeof payload.layoutMode === 'string' && /^[1-8]$/.test(payload.layoutMode)
+      ? payload.layoutMode : '1';
     for (const s of payload.sessions) {
       if (!s || typeof s !== 'object' || typeof (s as any).cwd !== 'string') {
         console.warn('store:save: invalid session entry');
@@ -66,7 +64,7 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
       projects: payload.projects,
       activeProjectId: payload.activeProjectId,
       sessions: payload.sessions,
-      layoutMode: payload.layoutMode,
+      layoutMode,
       sidebarCollapsed: !!payload.sidebarCollapsed,
       sidebarWidth: typeof payload.sidebarWidth === 'number' ? payload.sidebarWidth : undefined,
       sessionFilter: typeof payload.sessionFilter === 'string' ? payload.sessionFilter : undefined,

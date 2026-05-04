@@ -24,6 +24,7 @@ type Action =
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
   | { type: 'UPDATE_CWD'; id: string; cwd: string }
+  | { type: 'GROUP_BY_TYPE' }
   | { type: 'RESTORE'; state: AppState }
   | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
@@ -354,6 +355,20 @@ function reducer(state: AppState, action: Action): AppState {
         s.id === action.id ? { ...s, cwd: action.cwd } : s,
       );
       return { ...state, sessions };
+    }
+    case 'GROUP_BY_TYPE': {
+      const projectId = state.activeProjectId;
+      const otherSessions = state.sessions.filter((s) => s.projectId !== projectId);
+      const projectSessions = state.sessions.filter((s) => s.projectId === projectId);
+      const grouped = [
+        ...projectSessions.filter((s) => s.sessionType === 'claude'),
+        ...projectSessions.filter((s) => s.sessionType === 'terminal'),
+      ];
+      const visibleReordered = [
+        ...state.visibleSessionIds.filter((id) => grouped.some((s) => s.id === id && s.sessionType === 'claude')),
+        ...state.visibleSessionIds.filter((id) => grouped.some((s) => s.id === id && s.sessionType === 'terminal')),
+      ];
+      return { ...state, sessions: [...otherSessions, ...grouped], visibleSessionIds: visibleReordered };
     }
     case 'RESTORE': {
       return action.state;

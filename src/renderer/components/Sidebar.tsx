@@ -35,7 +35,12 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [expandSignal, setExpandSignal] = useState<{ expanded: boolean; ts: number } | null>(null);
-  const setAllExpanded = (expanded: boolean) => setExpandSignal({ expanded, ts: Date.now() });
+  const [allExpanded, setAllExpandedState] = useState(true);
+  const toggleAll = () => {
+    const next = !allExpanded;
+    setAllExpandedState(next);
+    setExpandSignal({ expanded: next, ts: Date.now() });
+  };
   const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const lastShiftTime = useRef(0);
@@ -211,6 +216,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               }}
             >
               <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
+              <SidebarPill onClick={() => dispatch({ type: 'GROUP_BY_TYPE' })} label="Group" />
               <SidebarPill onClick={() => { if (searchOpen) { setSearchOpen(false); setSearchQuery(''); } else { setSearchOpen(true); } }} label="Search" />
             </div>
 
@@ -370,8 +376,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               }}
             >
               <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
-              <SidebarPill onClick={() => setAllExpanded(true)} label="Expand" />
-              <SidebarPill onClick={() => setAllExpanded(false)} label="Collapse" />
+              <SidebarPill onClick={toggleAll} label={allExpanded ? 'Collapse' : 'Expand'} />
+              <SidebarPill onClick={() => dispatch({ type: 'GROUP_BY_TYPE' })} label="Group" />
             </div>
 
             {/* Project tree */}
