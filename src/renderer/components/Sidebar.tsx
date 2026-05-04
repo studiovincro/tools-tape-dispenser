@@ -8,7 +8,7 @@ import {
 import { disposeTerminal } from '../hooks/useTerminal';
 import { theme } from '../theme';
 import { randomId } from '../utils';
-import type { SessionInfo } from '../../shared/types';
+import type { SessionInfo, LayoutMode } from '../../shared/types';
 
 interface SidebarProps {
   onAddSession: (type: 'claude' | 'terminal') => void;
@@ -101,6 +101,10 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
     setContextMenu({
       x: e.clientX, y: e.clientY,
       items: [
+        ...(projectSessions.length > 0 ? [{ label: 'Show All Panes', onClick: () => {
+          const layout = String(Math.min(projectSessions.length, 8)) as LayoutMode;
+          dispatch({ type: 'SET_LAYOUT', mode: layout });
+        } }] : []),
         { label: 'Rename', onClick: () => setFocusedEditing(true) },
         { label: 'Add Claude Session', onClick: () => { onAddSession('claude'); } },
         { label: 'Add Terminal Session', onClick: () => { onAddSession('terminal'); } },
@@ -124,6 +128,11 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
       x: e.clientX, y: e.clientY,
       items: [
         { label: 'Project-only View', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); setFocusedProjectId(projectId); } },
+        ...(projectSessions.length > 0 ? [{ label: 'Show All Panes', onClick: () => {
+          dispatch({ type: 'SET_ACTIVE_PROJECT', projectId });
+          const layout = String(Math.min(projectSessions.length, 8)) as LayoutMode;
+          dispatch({ type: 'SET_LAYOUT', mode: layout });
+        } }] : []),
         { label: 'Rename', onClick: () => setEditingProjectId(projectId) },
         { label: 'Add Claude Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('claude'); } },
         { label: 'Add Terminal Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('terminal'); } },
