@@ -114,13 +114,25 @@ export function SplitLayout() {
           const name = window.prompt('Session name:', session.label);
           if (name) dispatch({ type: 'RENAME_SESSION', id, label: name });
         }},
-        { label: 'Close Session', onClick: () => {
+        { label: 'Restart Session', separator: true, danger: true, onClick: async () => {
+          if (!window.confirm(`Restart "${session.label}"? This will kill the current session and start a new one.`)) return;
+          const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
+          dispatch({
+            type: 'ADD_SESSION',
+            restoring: true,
+            session: { ...result, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
+          });
+          dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
+          disposeTerminal(id);
+          dispatch({ type: 'REMOVE_SESSION', id });
+        }},
+        { label: 'Close Session', danger: true, onClick: () => {
           if (window.confirm(`Close "${session.label}"?`)) {
             window.electronAPI.killSession(id);
             disposeTerminal(id);
             dispatch({ type: 'REMOVE_SESSION', id });
           }
-        }, danger: true },
+        }},
       ],
     });
   }, [sessions, visibleSessionIds, isMultiPane, dispatch]);

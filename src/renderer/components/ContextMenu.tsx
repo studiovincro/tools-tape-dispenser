@@ -5,6 +5,7 @@ export interface MenuItem {
   label: string;
   onClick: () => void;
   danger?: boolean;
+  separator?: boolean;
   submenu?: MenuItem[];
 }
 
@@ -58,13 +59,17 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
       }}
     >
       {items.map((item, i) => (
-        <ContextMenuItem
-          key={i}
-          item={item}
-          isSubmenuOpen={openSubmenu === i}
-          onHover={() => setOpenSubmenu(item.submenu ? i : null)}
-          onClose={onClose}
-        />
+        <React.Fragment key={i}>
+          {item.separator && (
+            <div style={{ height: 1, background: theme.borderSubtle, margin: '4px 0' }} />
+          )}
+          <ContextMenuItem
+            item={item}
+            isSubmenuOpen={openSubmenu === i}
+            onHover={() => setOpenSubmenu(item.submenu ? i : null)}
+            onClose={onClose}
+          />
+        </React.Fragment>
       ))}
     </div>
   );
