@@ -186,59 +186,25 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
       >
         {focusedProjectId ? (
           <>
-            {/* Focused project header — back / search */}
+            {/* Focused project header — back */}
             <div
               style={{
-                height: 39,
-                minHeight: 39,
-                boxSizing: 'border-box',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 12px',
-                borderBottom: `1px solid ${theme.borderSubtle}`,
-                flexShrink: 0,
-                gap: 6,
-                background: searchOpen ? theme.tabActiveBackground : 'transparent',
+                height: 39, minHeight: 39, boxSizing: 'border-box',
+                display: 'flex', alignItems: 'center', padding: '0 12px',
+                borderBottom: `1px solid ${theme.borderSubtle}`, flexShrink: 0, gap: 6,
               }}
             >
-              {searchOpen ? (
-                <>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search sessions..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); }
-                    }}
-                    autoFocus
-                    style={{
-                      flex: 1, border: 'none', outline: 'none', fontSize: 14,
-                      fontFamily: 'system-ui', background: 'transparent',
-                      color: theme.tabActiveText, padding: 0,
-                    }}
-                  />
-                  {searchQuery && (
-                    <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
-                      style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
-                  )}
-                  <span onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
-                    style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 12, fontFamily: 'system-ui' }}>Esc</span>
-                </>
-              ) : (
-                <span
-                  onClick={() => { setFocusedProjectId(null); setSearchQuery(''); }}
-                  style={{
-                    fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
-                    letterSpacing: 0.5, color: theme.tabInactiveText,
-                    fontFamily: 'system-ui', flex: 1, cursor: 'pointer',
-                  }}
-                  title="Back to all projects"
-                >
-                  ← Projects
-                </span>
-              )}
+              <span
+                onClick={() => { setFocusedProjectId(null); }}
+                style={{
+                  fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
+                  letterSpacing: 0.5, color: theme.tabInactiveText,
+                  fontFamily: 'system-ui', flex: 1, cursor: 'pointer',
+                }}
+                title="Back to all projects"
+              >
+                ← Projects
+              </span>
             </div>
 
             {/* Filter + Search toolbar */}
@@ -252,6 +218,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               <SidebarPill onClick={() => dispatch({ type: 'GROUP_BY_TYPE' })} label="Group" />
               <SidebarPill onClick={() => { if (searchOpen) { setSearchOpen(false); setSearchQuery(''); } else { setSearchOpen(true); } }} label="Search" />
             </div>
+
+            {searchOpen && <SearchBar searchInputRef={searchInputRef} searchQuery={searchQuery} setSearchQuery={setSearchQuery} setSearchOpen={setSearchOpen} />}
 
             {/* Focused project name */}
             <div
@@ -355,58 +323,23 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           </>
         ) : (
           <>
-            {/* Header — toggles between PROJECTS and search input */}
+            {/* Header — PROJECTS + new project */}
             <div
               style={{
-                height: 39,
-                minHeight: 39,
-                boxSizing: 'border-box',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 12px',
-                borderBottom: `1px solid ${theme.borderSubtle}`,
-                flexShrink: 0,
-                gap: 6,
-                background: searchOpen ? theme.tabActiveBackground : 'transparent',
+                height: 39, minHeight: 39, boxSizing: 'border-box',
+                display: 'flex', alignItems: 'center', padding: '0 12px',
+                borderBottom: `1px solid ${theme.borderSubtle}`, flexShrink: 0, gap: 6,
               }}
             >
-              {searchOpen ? (
-                <>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); }
-                    }}
-                    autoFocus
-                    style={{
-                      flex: 1, border: 'none', outline: 'none', fontSize: 14,
-                      fontFamily: 'system-ui', background: 'transparent',
-                      color: theme.tabActiveText, padding: 0,
-                    }}
-                  />
-                  {searchQuery && (
-                    <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
-                      style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
-                  )}
-                  <span onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
-                    style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 12, fontFamily: 'system-ui' }}>Esc</span>
-                </>
-              ) : (
-                <>
-                  <span
-                    onClick={() => setSearchOpen(true)}
-                    style={{
-                      fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
-                      letterSpacing: 0.5, color: theme.tabInactiveText,
-                      fontFamily: 'system-ui', flex: 1, cursor: 'pointer',
-                    }}
-                  >
-                    Projects
-                  </span>
+              <span
+                style={{
+                  fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
+                  letterSpacing: 0.5, color: theme.tabInactiveText,
+                  fontFamily: 'system-ui', flex: 1,
+                }}
+              >
+                Projects
+              </span>
                   <button
                     onClick={() => {
                       const existingCount = projects.filter((p) => p.name.startsWith('New Project')).length;
@@ -423,8 +356,6 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                   >
                     +
                   </button>
-                </>
-              )}
             </div>
 
             {/* Collapse/Expand all + filter */}
@@ -437,7 +368,10 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
               <SidebarPill onClick={toggleAll} label={allExpanded ? 'Collapse' : 'Expand'} />
               <SidebarPill onClick={() => dispatch({ type: 'GROUP_BY_TYPE' })} label="Group" />
+              <SidebarPill onClick={() => { if (searchOpen) { setSearchOpen(false); setSearchQuery(''); } else { setSearchOpen(true); } }} label="Search" />
             </div>
+
+            {searchOpen && <SearchBar searchInputRef={searchInputRef} searchQuery={searchQuery} setSearchQuery={setSearchQuery} setSearchOpen={setSearchOpen} />}
 
             {/* Project tree */}
             <div style={{ flex: 1, overflow: 'auto', padding: 0 }}>
@@ -1078,6 +1012,42 @@ function MenuOption({ label, sublabel, onClick }: { label: string; sublabel: str
       <div style={{ fontSize: 12, fontFamily: 'system-ui', color: theme.tabInactiveText, marginTop: 1 }}>
         {sublabel}
       </div>
+    </div>
+  );
+}
+
+function SearchBar({ searchInputRef, searchQuery, setSearchQuery, setSearchOpen }: {
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  setSearchOpen: (open: boolean) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 12px', borderBottom: `1px solid ${theme.borderSubtle}`,
+        flexShrink: 0, background: theme.tabActiveBackground,
+      }}
+    >
+      <input
+        ref={searchInputRef}
+        type="text"
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); } }}
+        autoFocus
+        style={{
+          flex: 1, border: 'none', outline: 'none', fontSize: 14,
+          fontFamily: 'system-ui', background: 'transparent',
+          color: theme.tabActiveText, padding: 0,
+        }}
+      />
+      {searchQuery && (
+        <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+          style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
+      )}
     </div>
   );
 }
