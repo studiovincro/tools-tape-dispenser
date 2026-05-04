@@ -13,6 +13,7 @@ import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { ShortcutHelp } from './components/ShortcutHelp';
 import { Settings } from './components/Settings';
+import { CommandPalette } from './components/CommandPalette';
 import { disposeTerminal } from './hooks/useTerminal';
 import type { LayoutMode, SessionType, SessionFilter } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
@@ -25,6 +26,7 @@ function AppInner() {
   const colorCounter = useRef(0);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   const projectSessions = getProjectSessions(state);
 
@@ -137,7 +139,10 @@ function AppInner() {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
 
-      if (meta && e.key === 'b') {
+      if (meta && e.key === 'p') {
+        e.preventDefault();
+        setShowCommandPalette((v) => !v);
+      } else if (meta && e.key === 'b') {
         e.preventDefault();
         dispatch({ type: 'TOGGLE_SIDEBAR' });
       } else if (meta && e.shiftKey && e.key === 'n') {
@@ -361,6 +366,14 @@ function AppInner() {
           onSave={(s) => dispatch({ type: 'SET_SETTINGS', settings: s })}
           onClose={() => setShowSettings(false)}
           onPickDirectory={() => window.electronAPI.pickDirectory()}
+        />
+      )}
+      {showCommandPalette && (
+        <CommandPalette
+          onClose={() => setShowCommandPalette(false)}
+          onAddSession={addSession}
+          onShowSettings={() => setShowSettings(true)}
+          onShowShortcuts={() => setShowShortcutHelp(true)}
         />
       )}
     </div>
