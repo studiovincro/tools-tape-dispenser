@@ -25,6 +25,10 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
     return ptyManager.getBuffer(id);
   });
 
+  ipcMain.handle('session:cwd', (_event, { id }: { id: string }) => {
+    return ptyManager.getCwd(id);
+  });
+
   ipcMain.handle('dialog:pick-directory', async () => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return null;

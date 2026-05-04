@@ -33,6 +33,7 @@ export interface ElectronAPI {
   resizeSession(id: string, cols: number, rows: number): void;
   killSession(id: string): Promise<void>;
   getSessionBuffer(id: string): Promise<string>;
+  getSessionCwd(id: string): Promise<string | null>;
   pickDirectory(): Promise<string | null>;
   onPtyData(callback: (id: string, data: string) => void): () => void;
   onPtyExit(callback: (id: string, code: number) => void): () => void;
@@ -59,6 +60,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getSessionBuffer(id: string) {
     return ipcRenderer.invoke('session:buffer', { id });
+  },
+
+  getSessionCwd(id: string) {
+    return ipcRenderer.invoke('session:cwd', { id });
   },
 
   pickDirectory() {

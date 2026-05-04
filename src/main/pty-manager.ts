@@ -1,6 +1,7 @@
 import * as pty from 'node-pty';
 import { BrowserWindow } from 'electron';
 import { randomUUID } from 'crypto';
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -138,6 +139,19 @@ export class PtyManager {
     return this.sessions.get(id)?.outputBuffer ?? '';
   }
 
+  getCwd(id: string): string | null {
+    const session = this.sessions.get(id);
+    if (!session) return null;
+    try {
+      const pid = session.pty.pid;
+      const result = execSync(`lsof -a -p ${pid} -d cwd -Fn`, { encoding: 'utf8', timeout: 2000, shell: '/bin/sh' });
+      const match = result.match(/^n(.+)$/m);
+      return match ? match[1] : session.cwd;
+    } catch {
+      return session.cwd;
+    }
+  }
+
   writeToSession(id: string, data: string): void {
     const session = this.sessions.get(id);
     if (!session) {
@@ -161,14 +175,18 @@ export class PtyManager {
   killSession(id: string): void {
     const session = this.sessions.get(id);
     if (session) {
-      session.pty.kill();
+      // Send SIGTERM first so the shell can flush history, then SIGKILL after a brief delay
+      try { process.kill(session.pty.pid, 'SIGTERM'); } catch {}
+      setTimeout(() => {
+        try { session.pty.kill(); } catch {}
+      }, 300);
       this.sessions.delete(id);
     }
   }
 
   killAll(): void {
     for (const [, session] of this.sessions) {
-      session.pty.kill();
+      try { session.pty.kill(); } catch {}
     }
     this.sessions.clear();
   }

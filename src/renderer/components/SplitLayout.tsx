@@ -116,11 +116,13 @@ export function SplitLayout() {
         }},
         { label: 'Restart Session', separator: true, danger: true, onClick: async () => {
           if (!window.confirm(`Restart "${session.label}"? This will kill the current session and start a new one.`)) return;
-          const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
+          let currentCwd = session.cwd;
+          try { currentCwd = await window.electronAPI.getSessionCwd(id) || session.cwd; } catch {}
+          const result = await window.electronAPI.createSession(currentCwd, session.sessionType);
           dispatch({
             type: 'ADD_SESSION',
             restoring: true,
-            session: { ...result, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
+            session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
           });
           dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
           disposeTerminal(id);
@@ -232,11 +234,13 @@ export function SplitLayout() {
                   status={session?.status}
                   fontSize={settings.terminalFontSize}
                   onRestart={session ? async () => {
-                    const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
+                    let currentCwd = session.cwd;
+                    try { currentCwd = await window.electronAPI.getSessionCwd(id) || session.cwd; } catch {}
+                    const result = await window.electronAPI.createSession(currentCwd, session.sessionType);
                     dispatch({
                       type: 'ADD_SESSION',
                       restoring: true,
-                      session: { ...result, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
+                      session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
                     });
                     dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
                     disposeTerminal(id);
