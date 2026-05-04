@@ -189,32 +189,41 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                     style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 12, fontFamily: 'system-ui' }}>Esc</span>
                 </>
               ) : (
-                <>
-                  <span
-                    onClick={() => { setFocusedProjectId(null); setSearchQuery(''); }}
-                    style={{
-                      fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
-                      letterSpacing: 0.5, color: theme.tabInactiveText,
-                      fontFamily: 'system-ui', cursor: 'pointer',
-                    }}
-                    title="Back to all projects"
-                  >
-                    ← Projects
-                  </span>
-                  <span style={{ flex: 1 }} />
-                  <SidebarPill onClick={() => setSearchOpen(true)} label="Search" />
-                </>
+                <span
+                  onClick={() => { setFocusedProjectId(null); setSearchQuery(''); }}
+                  style={{
+                    fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
+                    letterSpacing: 0.5, color: theme.tabInactiveText,
+                    fontFamily: 'system-ui', flex: 1, cursor: 'pointer',
+                  }}
+                  title="Back to all projects"
+                >
+                  ← Projects
+                </span>
               )}
+            </div>
+
+            {/* Filter + Search toolbar */}
+            <div
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderBottom: `1px solid ${theme.borderSubtle}`, flexShrink: 0,
+              }}
+            >
+              <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
+              <SidebarPill onClick={() => setSearchOpen(true)} label="Search" />
             </div>
 
             {/* Focused project name */}
             <div
+              onContextMenu={(e) => showProjectMenu(e, focusedProjectId)}
               style={{
                 padding: '10px 12px',
                 borderBottom: `1px solid ${theme.borderSubtle}`,
                 borderLeft: `3px solid ${theme.activeTabIndicator}`,
                 background: theme.tabActiveBackground,
                 flexShrink: 0,
+                cursor: 'context-menu',
               }}
             >
               <span
@@ -1013,7 +1022,7 @@ function SidebarPill({ onClick, label }: { onClick: () => void; label: string })
   );
 }
 
-const filterLabels: Record<string, string> = { all: 'All', claude: 'Claude', terminal: 'Terminal' };
+const filterLabels: Record<string, string> = { all: 'All Sessions', claude: 'Claude', terminal: 'Term' };
 
 function FilterMenuItem({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
@@ -1072,7 +1081,7 @@ function FilterPill({ value, onChange }: { value: string; onChange: (f: 'all' | 
           {(['all', 'claude', 'terminal'] as const).map((f) => (
             <FilterMenuItem
               key={f}
-              label={f === 'all' ? 'All Sessions' : f === 'claude' ? 'All Claude' : 'All Terminal'}
+              label={f === 'all' ? 'All Sessions' : f === 'claude' ? 'Claude' : 'Term'}
               active={f === value}
               onClick={() => { onChange(f); setMenuOpen(false); }}
             />
