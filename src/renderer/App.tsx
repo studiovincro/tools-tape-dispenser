@@ -36,9 +36,10 @@ function AppInner() {
       if (!cwd) return;
     }
     const result = await window.electronAPI.createSession(cwd, type);
+    const suffix = type === 'claude' ? ' - Claude' : ' - Term';
     dispatch({
       type: 'ADD_SESSION',
-      session: { ...result, status: 'running', projectId: state.activeProjectId, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
+      session: { ...result, label: result.label + suffix, status: 'running', projectId: state.activeProjectId, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
     });
   }, [dispatch, state.activeProjectId, state.settings.defaultSessionType, state.settings.defaultProjectDir]);
 
