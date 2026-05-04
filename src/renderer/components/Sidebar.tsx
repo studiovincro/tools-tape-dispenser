@@ -1054,9 +1054,12 @@ function SearchBar({ searchInputRef, searchQuery, setSearchQuery, setSearchOpen 
             color: theme.tabActiveText, padding: 0,
           }}
         />
-        {searchQuery && (
+        {searchQuery ? (
           <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
             style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
+        ) : (
+          <span onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+            style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 11, fontFamily: 'system-ui' }}>Esc</span>
         )}
       </div>
     </div>
