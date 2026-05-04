@@ -42,6 +42,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
     setExpandSignal({ expanded: next, ts: Date.now() });
   };
   const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
+  const [focusedEditing, setFocusedEditing] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const lastShiftTime = useRef(0);
 
@@ -93,6 +94,28 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  const showFocusedProjectMenu = (e: React.MouseEvent, projectId: string) => {
+    e.preventDefault();
+    const projectSessions = getProjectSessions(state, projectId);
+    setContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        { label: 'Rename', onClick: () => setFocusedEditing(true) },
+        { label: 'Add Claude Session', onClick: () => { onAddSession('claude'); } },
+        { label: 'Add Terminal Session', onClick: () => { onAddSession('terminal'); } },
+        ...(projectSessions.length > 0 ? [{ label: 'Close All Sessions', separator: true, onClick: async () => {
+          const count = projectSessions.length;
+          if (!window.confirm(`Close all ${count} session${count !== 1 ? 's' : ''} in this project?`)) return;
+          for (const s of projectSessions) {
+            await window.electronAPI.killSession(s.id);
+            disposeTerminal(s.id);
+            dispatch({ type: 'REMOVE_SESSION', id: s.id });
+          }
+        }, danger: true }] : []),
+      ],
+    });
+  };
 
   const showProjectMenu = (e: React.MouseEvent, projectId: string) => {
     e.preventDefault();
@@ -223,7 +246,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
 
             {/* Focused project name */}
             <div
-              onContextMenu={(e) => showProjectMenu(e, focusedProjectId)}
+              onContextMenu={(e) => showFocusedProjectMenu(e, focusedProjectId)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -233,19 +256,43 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                 borderLeft: `3px solid ${theme.activeTabIndicator}`,
                 background: theme.tabActiveBackground,
                 flexShrink: 0,
-                cursor: 'context-menu',
+                cursor: 'pointer',
               }}
             >
-              <span
-                style={{
-                  fontSize: 14, fontWeight: 600, color: theme.tabActiveText,
-                  fontFamily: 'system-ui',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  flex: 1,
-                }}
-              >
-                {projects.find((p) => p.id === focusedProjectId)?.name ?? 'Project'}
-              </span>
+              {focusedEditing ? (
+                <input
+                  autoFocus
+                  defaultValue={projects.find((p) => p.id === focusedProjectId)?.name ?? ''}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val && focusedProjectId) dispatch({ type: 'RENAME_PROJECT', projectId: focusedProjectId, name: val });
+                    setFocusedEditing(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    if (e.key === 'Escape') setFocusedEditing(false);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    flex: 1, border: `1px solid ${theme.activeTabIndicator}`, borderRadius: 4,
+                    padding: '3px 6px', fontSize: 14, fontFamily: 'system-ui', fontWeight: 600,
+                    outline: 'none', background: theme.tabActiveBackground, color: theme.tabActiveText,
+                  }}
+                />
+              ) : (
+                <span
+                  onDoubleClick={() => setFocusedEditing(true)}
+                  style={{
+                    fontSize: 14, fontWeight: 600, color: theme.tabActiveText,
+                    fontFamily: 'system-ui',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    flex: 1,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {projects.find((p) => p.id === focusedProjectId)?.name ?? 'Project'}
+                </span>
+              )}
               <span
                 style={{
                   fontSize: 12, fontWeight: 500, color: theme.tabInactiveText,
