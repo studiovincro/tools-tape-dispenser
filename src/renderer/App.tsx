@@ -29,6 +29,7 @@ function AppInner() {
   const [showSettings, setShowSettings] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [editNewProjectId, setEditNewProjectId] = useState<string | null>(null);
+  const [focusProjectId, setFocusProjectId] = useState<string | null>(null);
 
   const createNewProject = useCallback(() => {
     const existingCount = state.projects.filter((p) => p.name.startsWith('New Project')).length;
@@ -364,6 +365,8 @@ function AppInner() {
           onShowShortcuts={() => setShowShortcutHelp(true)}
           editNewProjectId={editNewProjectId}
           onEditNewProjectDone={() => setEditNewProjectId(null)}
+          focusProjectId={focusProjectId}
+          onFocusProjectDone={() => setFocusProjectId(null)}
         />
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <SplitLayout />
@@ -385,6 +388,10 @@ function AppInner() {
           onClose={() => setShowCommandPalette(false)}
           onAddSession={addSession}
           onNewProject={createNewProject}
+          onFocusProject={(id) => {
+            dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: id });
+            setFocusProjectId(id);
+          }}
           onShowSettings={() => setShowSettings(true)}
           onShowShortcuts={() => setShowShortcutHelp(true)}
         />

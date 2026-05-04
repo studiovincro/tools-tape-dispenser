@@ -19,6 +19,8 @@ interface SidebarProps {
   onShowShortcuts: () => void;
   editNewProjectId?: string | null;
   onEditNewProjectDone?: () => void;
+  focusProjectId?: string | null;
+  onFocusProjectDone?: () => void;
 }
 
 const statusColors: Record<SessionInfo['status'], string> = {
@@ -27,7 +29,7 @@ const statusColors: Record<SessionInfo['status'], string> = {
   exited: theme.statusExited,
 };
 
-export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts, editNewProjectId, onEditNewProjectDone }: SidebarProps) {
+export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts, editNewProjectId, onEditNewProjectDone, focusProjectId, onFocusProjectDone }: SidebarProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds, sessionFilter } = state;
@@ -41,6 +43,15 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
       onEditNewProjectDone?.();
     }
   }, [editNewProjectId]);
+
+  // Trigger focus mode from command palette
+  useEffect(() => {
+    if (focusProjectId) {
+      setFocusedProjectId(focusProjectId);
+      onFocusProjectDone?.();
+    }
+  }, [focusProjectId]);
+
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);

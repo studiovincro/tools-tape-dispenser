@@ -8,6 +8,7 @@ interface CommandPaletteProps {
   onClose: () => void;
   onAddSession: (type: 'claude' | 'terminal') => void;
   onNewProject: () => void;
+  onFocusProject: (projectId: string) => void;
   onShowSettings: () => void;
   onShowShortcuts: () => void;
 }
@@ -20,7 +21,7 @@ interface CommandItem {
   action: () => void;
 }
 
-export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSettings, onShowShortcuts }: CommandPaletteProps) {
+export function CommandPalette({ onClose, onAddSession, onNewProject, onFocusProject, onShowSettings, onShowShortcuts }: CommandPaletteProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const [query, setQuery] = useState('');
@@ -28,17 +29,34 @@ export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSett
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const commands = useMemo((): CommandItem[] => {
-    const items: CommandItem[] = [];
+  // Always build the full list; projects are tagged so we can hide them when not searching
+  const commands = useMemo((): (CommandItem & { searchOnly?: boolean })[] => {
+    const items: (CommandItem & { searchOnly?: boolean })[] = [];
 
-    // Sessions — jump to session
+    // Projects — always shown
+    for (const project of state.projects) {
+      const count = getProjectSessions(state, project.id).length;
+      items.push({
+        id: `project-${project.id}`,
+        label: project.name,
+        category: 'Projects',
+        hint: `${count} session${count !== 1 ? 's' : ''}`,
+        action: () => {
+          onClose();
+          onFocusProject(project.id);
+        },
+      });
+    }
+
+    // Sessions — only shown when searching
     for (const session of state.sessions) {
       const project = state.projects.find((p) => p.id === session.projectId);
       items.push({
         id: `session-${session.id}`,
         label: session.label,
-        category: project?.name ?? 'Project',
+        category: project?.name ?? 'Sessions',
         hint: session.sessionType === 'claude' ? 'Claude' : 'Terminal',
+        searchOnly: true,
         action: () => {
           if (session.projectId !== state.activeProjectId) {
             dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: session.projectId });
@@ -49,60 +67,31 @@ export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSett
       });
     }
 
-    // Projects — switch to project
-    for (const project of state.projects) {
-      const count = getProjectSessions(state, project.id).length;
-      items.push({
-        id: `project-${project.id}`,
-        label: project.name,
-        category: 'Switch Project',
-        hint: `${count} session${count !== 1 ? 's' : ''}`,
-        action: () => {
-          dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id });
-          onClose();
-        },
-      });
-    }
-
     // Actions
     items.push({
       id: 'new-claude',
       label: 'New Claude Session',
-      category: 'Action',
+      category: 'Actions',
       hint: 'Cmd+N',
       action: () => { onClose(); onAddSession('claude'); },
     });
     items.push({
       id: 'new-terminal',
       label: 'New Terminal Session',
-      category: 'Action',
+      category: 'Actions',
       hint: 'Cmd+Shift+N',
       action: () => { onClose(); onAddSession('terminal'); },
     });
     items.push({
-      id: 'settings',
-      label: 'Open Settings',
-      category: 'Action',
-      hint: 'Cmd+,',
-      action: () => { onClose(); onShowSettings(); },
-    });
-    items.push({
-      id: 'shortcuts',
-      label: 'Keyboard Shortcuts',
-      category: 'Action',
-      hint: 'Cmd+?',
-      action: () => { onClose(); onShowShortcuts(); },
-    });
-    items.push({
       id: 'new-project',
       label: 'New Project',
-      category: 'Action',
+      category: 'Actions',
       action: () => { onClose(); onNewProject(); },
     });
     items.push({
       id: 'show-all',
       label: 'Show All Panes',
-      category: 'Action',
+      category: 'Actions',
       action: () => {
         const filtered = state.sessions.filter((s) => s.projectId === state.activeProjectId);
         const layout = String(Math.min(filtered.length, 8)) as LayoutMode;
@@ -110,12 +99,26 @@ export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSett
         onClose();
       },
     });
+    items.push({
+      id: 'settings',
+      label: 'Open Settings',
+      category: 'Actions',
+      hint: 'Cmd+,',
+      action: () => { onClose(); onShowSettings(); },
+    });
+    items.push({
+      id: 'shortcuts',
+      label: 'Keyboard Shortcuts',
+      category: 'Actions',
+      hint: 'Cmd+?',
+      action: () => { onClose(); onShowShortcuts(); },
+    });
 
     return items;
   }, [state.sessions, state.projects, state.activeProjectId, dispatch, onClose, onAddSession, onShowSettings, onShowShortcuts]);
 
   const filtered = useMemo(() => {
-    if (!query) return commands;
+    if (!query) return commands.filter((c) => !c.searchOnly);
     const q = query.toLowerCase();
     return commands.filter((c) =>
       c.label.toLowerCase().includes(q) ||
@@ -223,23 +226,26 @@ export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSett
             return (
               <React.Fragment key={item.id}>
                 {showCategory && (
-                  <div style={{
-                    padding: '8px 16px 4px',
-                    fontSize: 11,
-                    fontFamily: 'system-ui',
-                    fontWeight: 600,
-                    color: theme.tabInactiveText,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                  }}>
-                    {item.category}
-                  </div>
+                  <>
+                    {i > 0 && <div style={{ height: 1, background: theme.borderSubtle, margin: '4px 0' }} />}
+                    <div style={{
+                      padding: '10px 16px 4px',
+                      fontSize: 11,
+                      fontFamily: 'system-ui',
+                      fontWeight: 600,
+                      color: theme.tabInactiveText,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}>
+                      {item.category}
+                    </div>
+                  </>
                 )}
                 <div
                   onClick={item.action}
                   onMouseEnter={() => setSelectedIndex(i)}
                   style={{
-                    padding: '8px 16px',
+                    padding: '9px 16px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
