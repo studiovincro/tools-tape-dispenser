@@ -369,9 +369,9 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                 padding: '6px 12px', borderBottom: `1px solid ${theme.borderSubtle}`, flexShrink: 0,
               }}
             >
+              <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
               <SidebarPill onClick={() => setAllExpanded(true)} label="Expand" />
               <SidebarPill onClick={() => setAllExpanded(false)} label="Collapse" />
-              <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
             </div>
 
             {/* Project tree */}
