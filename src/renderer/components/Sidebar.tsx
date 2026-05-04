@@ -100,6 +100,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
     setContextMenu({
       x: e.clientX, y: e.clientY,
       items: [
+        { label: 'Project-only View', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); setFocusedProjectId(projectId); } },
         { label: 'Rename', onClick: () => setEditingProjectId(projectId) },
         { label: 'Add Claude Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('claude'); } },
         { label: 'Add Terminal Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('terminal'); } },
@@ -354,7 +355,9 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                     onClick={() => {
                       const existingCount = projects.filter((p) => p.name.startsWith('New Project')).length;
                       const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
-                      dispatch({ type: 'ADD_PROJECT', project: { id: randomId(), name } });
+                      const newId = randomId();
+                      dispatch({ type: 'ADD_PROJECT', project: { id: newId, name } });
+                      setEditingProjectId(newId);
                     }}
                     style={{
                       background: 'transparent', border: 'none', color: theme.buttonMuted,
@@ -401,6 +404,9 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                     activeSessionId={activeSessionId}
                     visibleSessionIds={visibleSessionIds}
                     onSelectProject={() => {
+                      dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id });
+                    }}
+                    onFocusProject={() => {
                       dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: project.id });
                       setFocusedProjectId(project.id);
                     }}
@@ -511,6 +517,7 @@ function ProjectTree({
   activeSessionId,
   visibleSessionIds,
   onSelectProject,
+  onFocusProject,
   onSelectSession,
   onRename,
   onDelete,
@@ -533,6 +540,7 @@ function ProjectTree({
   activeSessionId: string | null;
   visibleSessionIds: string[];
   onSelectProject: () => void;
+  onFocusProject?: () => void;
   onSelectSession: (id: string) => void;
   onRename: (name: string) => void;
   onRenameSession: (id: string, label: string) => void;
@@ -609,7 +617,7 @@ function ProjectTree({
       {!hideHeader && <div
         onClick={() => { onSelectProject(); setExpanded(true); }}
         onContextMenu={onProjectContextMenu}
-        onDoubleClick={() => setEditing(true)}
+        onDoubleClick={() => { if (onFocusProject) onFocusProject(); }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -670,8 +678,8 @@ function ProjectTree({
         ) : (
           <>
             <span
+              onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
               style={{
-                flex: 1,
                 fontSize: 14,
                 fontFamily: 'system-ui',
                 fontWeight: 600,
@@ -683,6 +691,7 @@ function ProjectTree({
             >
               {project.name}
             </span>
+            <span style={{ flex: 1 }} />
             <span
               style={{
                 fontSize: 12,
