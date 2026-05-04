@@ -1073,9 +1073,30 @@ function FilterPill({ value, onChange }: { value: string; onChange: (f: 'all' | 
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
+  const isFiltered = value !== 'all';
+  const [pillHovered, setPillHovered] = useState(false);
+
   return (
     <div ref={menuRef} style={{ position: 'relative' }}>
-      <SidebarPill onClick={() => setMenuOpen(!menuOpen)} label={filterLabels[value] || 'All'} />
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        onMouseEnter={() => setPillHovered(true)}
+        onMouseLeave={() => setPillHovered(false)}
+        style={{
+          background: isFiltered ? '#e5484d' : pillHovered ? theme.tabHoverBackground : theme.borderSubtle,
+          border: 'none',
+          color: isFiltered ? '#fff' : theme.tabInactiveText,
+          cursor: 'pointer',
+          padding: '4px 10px',
+          borderRadius: 5,
+          fontSize: 12,
+          fontFamily: 'system-ui',
+          fontWeight: 500,
+          transition: 'background 0.12s, color 0.12s',
+        }}
+      >
+        {filterLabels[value] || 'All Sessions'}
+      </button>
       {menuOpen && (
         <div
           style={{
