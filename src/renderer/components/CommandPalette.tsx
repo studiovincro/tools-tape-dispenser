@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSessionState, useSessionDispatch, getProjectSessions } from '../store/session-context';
 import { theme } from '../theme';
+import { randomId } from '../utils';
 import type { SessionInfo, LayoutMode } from '../../shared/types';
 
 interface CommandPaletteProps {
@@ -90,6 +91,17 @@ export function CommandPalette({ onClose, onAddSession, onShowSettings, onShowSh
       category: 'Action',
       hint: 'Cmd+?',
       action: () => { onClose(); onShowShortcuts(); },
+    });
+    items.push({
+      id: 'new-project',
+      label: 'New Project',
+      category: 'Action',
+      action: () => {
+        const existingCount = state.projects.filter((p) => p.name.startsWith('New Project')).length;
+        const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
+        dispatch({ type: 'ADD_PROJECT', project: { id: randomId(), name } });
+        onClose();
+      },
     });
     items.push({
       id: 'show-all',
