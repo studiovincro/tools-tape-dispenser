@@ -332,12 +332,18 @@ function PaneHeader({
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/session-id', session.id);
+        e.dataTransfer.effectAllowed = 'move';
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
       style={{
         height: 37,
+        cursor: 'grab',
         minHeight: 37,
         boxSizing: 'border-box',
         display: 'flex',
@@ -350,7 +356,6 @@ function PaneHeader({
         borderBottom: `1px solid ${theme.borderSubtle}`,
         flexShrink: 0,
         userSelect: 'none',
-        cursor: showClose ? 'pointer' : 'default',
       }}
     >
       <span

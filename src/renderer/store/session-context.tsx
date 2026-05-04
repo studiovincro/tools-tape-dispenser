@@ -341,7 +341,18 @@ function reducer(state: AppState, action: Action): AppState {
         visible[existingIdx] = visible[action.index];
       }
       visible[action.index] = action.sessionId;
-      return { ...state, visibleSessionIds: visible, activeSessionId: action.sessionId };
+      // Reorder sessions array to match visible order for sidebar consistency
+      const otherSessions = state.sessions.filter((s) => s.projectId !== state.activeProjectId);
+      const projectSessions = state.sessions.filter((s) => s.projectId === state.activeProjectId);
+      const reordered: SessionInfo[] = [];
+      for (const vid of visible) {
+        const s = projectSessions.find((ps) => ps.id === vid);
+        if (s) reordered.push(s);
+      }
+      for (const s of projectSessions) {
+        if (!reordered.some((r) => r.id === s.id)) reordered.push(s);
+      }
+      return { ...state, sessions: [...otherSessions, ...reordered], visibleSessionIds: visible, activeSessionId: action.sessionId };
     }
     case 'UPDATE_STATUS': {
       const sessions = state.sessions.map((s) =>
