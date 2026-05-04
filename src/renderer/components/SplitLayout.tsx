@@ -210,14 +210,14 @@ export function SplitLayout() {
               isFocused={isFocused}
               isMultiPane={isMultiPane}
               paneColor={paneColor}
-              onClick={() => { if (isMultiPane) dispatch({ type: 'SET_ACTIVE', id }); }}
+              onClick={() => dispatch({ type: 'SET_ACTIVE', id })}
               onDrop={(sessionId) => dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId })}
             >
               {session && (
                 <PaneHeader
                   session={session}
                   projectName={projects.find((p) => p.id === session.projectId)?.name ?? ''}
-                  color={isMultiPane ? paneColor : theme.tabInactiveText}
+                  color={paneColor}
                   showClose={isMultiPane}
                   onClose={() => dispatch({ type: 'REMOVE_FROM_STAGE', id })}
                   onDoubleClick={() => focusPane(id)}
@@ -418,10 +418,8 @@ function PaneSlot({
         display: 'flex',
         flexDirection: 'column',
         gridColumn: spanFullWidth ? '1 / -1' : undefined,
-        border: isMultiPane
-          ? `2px solid ${dragOver ? theme.activeTabIndicator : isFocused ? paneColor : theme.borderSubtle}`
-          : 'none',
-        borderRadius: isMultiPane ? 6 : 0,
+        border: `2px solid ${dragOver ? theme.activeTabIndicator : isFocused ? paneColor : theme.borderSubtle}`,
+        borderRadius: 6,
         outline: dragOver ? `2px dashed ${theme.activeTabIndicator}` : 'none',
         outlineOffset: -4,
         transition: 'border-color 0.15s',
