@@ -1025,29 +1025,40 @@ function SearchBar({ searchInputRef, searchQuery, setSearchQuery, setSearchOpen 
   return (
     <div
       style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '6px 12px', borderBottom: `1px solid ${theme.borderSubtle}`,
-        flexShrink: 0, background: theme.tabActiveBackground,
+        padding: '8px 12px',
+        borderBottom: `1px solid ${theme.borderSubtle}`,
+        flexShrink: 0,
       }}
     >
-      <input
-        ref={searchInputRef}
-        type="text"
-        placeholder="Search..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); } }}
-        autoFocus
+      <div
         style={{
-          flex: 1, border: 'none', outline: 'none', fontSize: 14,
-          fontFamily: 'system-ui', background: 'transparent',
-          color: theme.tabActiveText, padding: 0,
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '6px 10px',
+          background: theme.appBackground,
+          border: `1px solid ${theme.borderSubtle}`,
+          borderRadius: 6,
         }}
-      />
-      {searchQuery && (
-        <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
-          style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
-      )}
+      >
+        <span style={{ color: theme.tabInactiveText, fontSize: 13, flexShrink: 0 }}>🔍</span>
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Search sessions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); } }}
+          autoFocus
+          style={{
+            flex: 1, border: 'none', outline: 'none', fontSize: 13,
+            fontFamily: 'system-ui', background: 'transparent',
+            color: theme.tabActiveText, padding: 0,
+          }}
+        />
+        {searchQuery && (
+          <span onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+            style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</span>
+        )}
+      </div>
     </div>
   );
 }
