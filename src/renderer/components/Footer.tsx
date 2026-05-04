@@ -84,17 +84,8 @@ export function Footer({ onCycleLayout }: FooterProps) {
         <SessionCapacity sessions={state.sessions} />
       </div>
 
-      {/* Right: filter + layout toggle */}
+      {/* Right: layout toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <FilterToggle
-          value={sessionFilter}
-          counts={{
-            all: projectSessions.length,
-            claude: projectSessions.filter((s) => s.sessionType === 'claude').length,
-            terminal: projectSessions.filter((s) => s.sessionType === 'terminal').length,
-          }}
-          onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })}
-        />
         {showLayoutButton && (
           <button
             onClick={onCycleLayout}

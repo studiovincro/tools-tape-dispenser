@@ -28,7 +28,7 @@ const statusColors: Record<SessionInfo['status'], string> = {
 export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts }: SidebarProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
-  const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds } = state;
+  const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds, sessionFilter } = state;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -151,8 +151,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             {/* Focused project header — back / search */}
             <div
               style={{
-                height: 37,
-                minHeight: 37,
+                height: 39,
+                minHeight: 39,
                 boxSizing: 'border-box',
                 display: 'flex',
                 alignItems: 'center',
@@ -195,12 +195,14 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                     style={{
                       fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
                       letterSpacing: 0.5, color: theme.tabInactiveText,
-                      fontFamily: 'system-ui', flex: 1, cursor: 'pointer',
+                      fontFamily: 'system-ui', cursor: 'pointer',
                     }}
                     title="Back to all projects"
                   >
                     ← Projects
                   </span>
+                  <span style={{ flex: 1 }} />
+                  <SidebarPill onClick={() => setSearchOpen(true)} label="Search" />
                 </>
               )}
             </div>
@@ -232,7 +234,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               {(() => {
                 const focusedProject = projects.find((p) => p.id === focusedProjectId);
                 if (!focusedProject) return null;
-                const allSessions = getProjectSessions(state, focusedProjectId);
+                const totalSessions = getProjectSessions(state, focusedProjectId);
+                let allSessions = sessionFilter !== 'all' ? totalSessions.filter((s) => s.sessionType === sessionFilter) : totalSessions;
                 const query = searchQuery.toLowerCase();
                 const filteredSessions = query
                   ? allSessions.filter((s) => s.label.toLowerCase().includes(query))
@@ -269,8 +272,8 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             {/* Header — toggles between PROJECTS and search input */}
             <div
               style={{
-                height: 37,
-                minHeight: 37,
+                height: 39,
+                minHeight: 39,
                 boxSizing: 'border-box',
                 display: 'flex',
                 alignItems: 'center',
@@ -336,21 +339,23 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               )}
             </div>
 
-            {/* Collapse/Expand all */}
+            {/* Collapse/Expand all + filter */}
             <div
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '6px 12px', borderBottom: `1px solid ${theme.borderSubtle}`, flexShrink: 0,
               }}
             >
-              <SidebarPill onClick={() => setAllExpanded(true)} label="Expand all" />
-              <SidebarPill onClick={() => setAllExpanded(false)} label="Collapse all" />
+              <SidebarPill onClick={() => setAllExpanded(true)} label="Expand" />
+              <SidebarPill onClick={() => setAllExpanded(false)} label="Collapse" />
+              <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
             </div>
 
             {/* Project tree */}
             <div style={{ flex: 1, overflow: 'auto', padding: 0 }}>
               {projects.map((project) => {
-                const allSessions = getProjectSessions(state, project.id);
+                const totalSessions = getProjectSessions(state, project.id);
+                let allSessions = sessionFilter !== 'all' ? totalSessions.filter((s) => s.sessionType === sessionFilter) : totalSessions;
                 const query = searchQuery.toLowerCase();
                 const sessions = query
                   ? allSessions.filter((s) => s.label.toLowerCase().includes(query) || project.name.toLowerCase().includes(query))
@@ -362,6 +367,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                     key={project.id}
                     project={project}
                     sessions={sessions}
+                    totalCount={totalSessions.length}
                     isActive={isActive}
                     activeSessionId={activeSessionId}
                     visibleSessionIds={visibleSessionIds}
@@ -489,9 +495,11 @@ function ProjectTree({
   canDelete,
   expandSignal,
   hideHeader,
+  totalCount,
 }: {
   project: { id: string; name: string };
   sessions: SessionInfo[];
+  totalCount?: number;
   isActive: boolean;
   activeSessionId: string | null;
   visibleSessionIds: string[];
@@ -509,6 +517,7 @@ function ProjectTree({
   canDelete: boolean;
   expandSignal: { expanded: boolean; ts: number } | null;
   hideHeader?: boolean;
+  totalCount?: number;
 }) {
   const dispatch = useSessionDispatch();
   const [expanded, setExpanded] = useState(true);
@@ -661,7 +670,7 @@ function ProjectTree({
                 fontFamily: 'system-ui',
               }}
             >
-              {sessions.length}
+              {totalCount ?? sessions.length}
             </span>
             {canDelete && hovered && (
               <span
@@ -1001,6 +1010,76 @@ function SidebarPill({ onClick, label }: { onClick: () => void; label: string })
     >
       {label}
     </button>
+  );
+}
+
+const filterLabels: Record<string, string> = { all: 'All', claude: 'Claude', terminal: 'Terminal' };
+
+function FilterMenuItem({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '7px 14px',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontFamily: 'system-ui',
+        color: active ? theme.activeTabIndicator : theme.tabActiveText,
+        fontWeight: active ? 600 : 400,
+        background: hovered ? theme.tabHoverBackground : 'transparent',
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function FilterPill({ value, onChange }: { value: string; onChange: (f: 'all' | 'claude' | 'terminal') => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <SidebarPill onClick={() => setMenuOpen(!menuOpen)} label={filterLabels[value] || 'All'} />
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: 4,
+            background: theme.tabActiveBackground,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            overflow: 'hidden',
+            minWidth: 130,
+            zIndex: 100,
+          }}
+        >
+          {(['all', 'claude', 'terminal'] as const).map((f) => (
+            <FilterMenuItem
+              key={f}
+              label={f === 'all' ? 'All Sessions' : f === 'claude' ? 'All Claude' : 'All Terminal'}
+              active={f === value}
+              onClick={() => { onChange(f); setMenuOpen(false); }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
