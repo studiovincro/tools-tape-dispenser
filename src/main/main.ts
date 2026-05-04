@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import { execSync } from 'child_process';
 import path from 'path';
 import { PtyManager } from './pty-manager';
@@ -69,7 +69,17 @@ const createWindow = () => {
   }
 };
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+  // Remove default menu to prevent Cmd+P from triggering print dialog
+  const menu = Menu.buildFromTemplate([
+    { role: 'appMenu' },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' },
+  ]);
+  Menu.setApplicationMenu(menu);
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   ptyManager.killAll();

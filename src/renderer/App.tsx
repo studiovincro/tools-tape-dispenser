@@ -139,7 +139,7 @@ function AppInner() {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
 
-      if (meta && e.key === 'p') {
+      if (meta && e.shiftKey && e.key === 'p') {
         e.preventDefault();
         setShowCommandPalette((v) => !v);
       } else if (meta && e.key === 'b') {
@@ -191,8 +191,8 @@ function AppInner() {
       dispatch({ type: 'SET_ACTIVE', id: projectSessions[next].id });
     }
 
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [state.activeSessionId, projectSessions, state.layoutMode, addSession, closeSession, cycleLayout, dispatch, showShortcutHelp, showSettings]);
 
   // Restore sessions on launch, or create a default one
