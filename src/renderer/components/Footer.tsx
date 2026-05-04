@@ -49,8 +49,6 @@ export function Footer({ onCycleLayout }: FooterProps) {
   const showLayoutButton = filteredSessions.length > 0;
   const visibleCount = state.visibleSessionIds.length;
   const canShowAll = filteredSessions.length > visibleCount;
-  const [layoutHovered, setLayoutHovered] = useState(false);
-  const [showAllHovered, setShowAllHovered] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -87,62 +85,212 @@ export function Footer({ onCycleLayout }: FooterProps) {
         <SessionCapacity sessions={state.sessions} />
       </div>
 
-      {/* Right: layout toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        {filteredSessions.length > 0 && (
-          <button
-            onClick={() => {
-              const layout = String(Math.min(filteredSessions.length, 8)) as LayoutMode;
-              dispatch({ type: 'SET_LAYOUT', mode: layout });
-            }}
-            onMouseEnter={() => setShowAllHovered(true)}
-            onMouseLeave={() => setShowAllHovered(false)}
-            style={{
-              background: 'transparent',
-              border: showAllHovered ? `1px solid ${theme.borderSubtle}` : '1px solid transparent',
-              color: showAllHovered ? theme.buttonMutedHover : theme.buttonMuted,
-              cursor: 'pointer',
-              padding: '3px 8px',
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'border-color 0.12s, color 0.12s',
-            }}
-            title="Show all sessions"
-          >
-            <LayoutIcon count={Math.min(filteredSessions.length, 8)} maxCols={maxCols} />
-            <span style={{ fontSize: 13 }}>All {filteredSessions.length}</span>
-          </button>
-        )}
+      {/* Right: pane layout menu */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         {showLayoutButton && (
-          <button
-            onClick={onCycleLayout}
-            onMouseEnter={() => setLayoutHovered(true)}
-            onMouseLeave={() => setLayoutHovered(false)}
-            style={{
-              background: 'transparent',
-              border: layoutHovered ? `1px solid ${theme.borderSubtle}` : '1px solid transparent',
-              color: layoutHovered ? theme.buttonMutedHover : theme.buttonMuted,
-              cursor: 'pointer',
-              padding: '3px 8px',
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'border-color 0.12s, color 0.12s',
-            }}
-            title="Cycle layout (Cmd+\\)"
-          >
-            <LayoutIcon count={visibleCount || 1} maxCols={maxCols} />
-            <span style={{ fontSize: 13 }}>{visibleCount || 1} pane{(visibleCount || 1) !== 1 ? 's' : ''}</span>
-          </button>
+          <PaneLayoutMenu
+            visibleCount={visibleCount}
+            sessionCount={filteredSessions.length}
+            maxCols={maxCols}
+            onSetPanes={(n) => dispatch({ type: 'SET_LAYOUT', mode: String(Math.min(n, 8)) as LayoutMode })}
+            onShowAll={() => dispatch({ type: 'SET_LAYOUT', mode: String(Math.min(filteredSessions.length, 8)) as LayoutMode })}
+          />
         )}
       </div>
     </div>
   );
 }
 
+
+function PaneLayoutMenu({ visibleCount, sessionCount, maxCols, onSetPanes, onShowAll }: {
+  visibleCount: number;
+  sessionCount: number;
+  maxCols: number;
+  onSetPanes: (n: number) => void;
+  onShowAll: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  const quickCounts = [];
+  for (let i = 1; i <= Math.min(5, sessionCount); i++) quickCounts.push(i);
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: 'transparent',
+          border: hovered ? `1px solid ${theme.borderSubtle}` : '1px solid transparent',
+          color: hovered ? theme.buttonMutedHover : theme.buttonMuted,
+          cursor: 'pointer',
+          padding: '3px 8px',
+          borderRadius: 4,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          transition: 'border-color 0.12s, color 0.12s',
+        }}
+      >
+        <LayoutIcon count={visibleCount || 1} maxCols={maxCols} />
+        <span style={{ fontSize: 13 }}>{visibleCount || 1} pane{(visibleCount || 1) !== 1 ? 's' : ''}</span>
+      </button>
+
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            right: 0,
+            marginBottom: 6,
+            background: theme.tabActiveBackground,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            overflow: 'hidden',
+            minWidth: 160,
+            zIndex: 100,
+          }}
+        >
+          {/* Quick pane counts */}
+          {quickCounts.map((n) => (
+            <PaneMenuItem
+              key={n}
+              label={`${n} pane${n !== 1 ? 's' : ''}`}
+              icon={<LayoutIcon count={n} maxCols={maxCols} />}
+              active={visibleCount === n}
+              onClick={() => { onSetPanes(n); setMenuOpen(false); }}
+            />
+          ))}
+
+          {/* More panes submenu */}
+          {sessionCount > 5 && (
+            <PaneMenuSubmenu
+              label="More panes..."
+              sessionCount={sessionCount}
+              visibleCount={visibleCount}
+              maxCols={maxCols}
+              onSelect={(n) => { onSetPanes(n); setMenuOpen(false); }}
+            />
+          )}
+
+          {/* All panes */}
+          {sessionCount > 1 && (
+            <PaneMenuItem
+              label={`All ${sessionCount} panes`}
+              icon={<LayoutIcon count={Math.min(sessionCount, 8)} maxCols={maxCols} />}
+              active={visibleCount === sessionCount}
+              onClick={() => { onShowAll(); setMenuOpen(false); }}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaneMenuItem({ label, icon, active, onClick }: { label: string; icon?: React.ReactNode; active?: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '7px 14px',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontFamily: 'system-ui',
+        color: active ? theme.activeTabIndicator : theme.tabActiveText,
+        fontWeight: active ? 600 : 400,
+        background: hovered ? theme.tabHoverBackground : 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+      }}
+    >
+      {icon}
+      {label}
+    </div>
+  );
+}
+
+function PaneMenuSubmenu({ label, sessionCount, visibleCount, maxCols, onSelect }: {
+  label: string;
+  sessionCount: number;
+  visibleCount: number;
+  maxCols: number;
+  onSelect: (n: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  const counts = [];
+  for (let i = 6; i <= Math.min(15, sessionCount); i++) counts.push(i);
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onMouseEnter={() => { setHovered(true); setOpen(true); }}
+      onMouseLeave={() => { setHovered(false); setOpen(false); }}
+    >
+      <div
+        style={{
+          padding: '7px 14px',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontFamily: 'system-ui',
+          color: theme.tabActiveText,
+          background: hovered ? theme.tabHoverBackground : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {label}
+        <span style={{ color: theme.tabInactiveText, fontSize: 12 }}>▶</span>
+      </div>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            right: '100%',
+            bottom: 0,
+            background: theme.tabActiveBackground,
+            border: `1px solid ${theme.borderSubtle}`,
+            borderRadius: 8,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            padding: '4px 0',
+            minWidth: 140,
+            zIndex: 101,
+          }}
+        >
+          {counts.map((n) => (
+            <PaneMenuItem
+              key={n}
+              label={`${n} panes`}
+              icon={<LayoutIcon count={Math.min(n, 8)} maxCols={maxCols} />}
+              active={visibleCount === n}
+              onClick={() => onSelect(n)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SessionCapacity({ sessions }: { sessions: SessionInfo[] }) {
   const claudeSessions = sessions.filter((s) => s.sessionType === 'claude');
