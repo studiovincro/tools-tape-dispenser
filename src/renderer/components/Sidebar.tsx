@@ -17,6 +17,8 @@ interface SidebarProps {
   onDeleteProject: (projectId: string) => void;
   onShowSettings: () => void;
   onShowShortcuts: () => void;
+  editNewProjectId?: string | null;
+  onEditNewProjectDone?: () => void;
 }
 
 const statusColors: Record<SessionInfo['status'], string> = {
@@ -25,12 +27,20 @@ const statusColors: Record<SessionInfo['status'], string> = {
   exited: theme.statusExited,
 };
 
-export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts }: SidebarProps) {
+export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDeleteProject, onShowSettings, onShowShortcuts, editNewProjectId, onEditNewProjectDone }: SidebarProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const { projects, activeProjectId, activeSessionId, sidebarCollapsed, sidebarWidth, visibleSessionIds, sessionFilter } = state;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+
+  // Trigger edit mode for newly created projects (e.g. from command palette)
+  useEffect(() => {
+    if (editNewProjectId) {
+      setEditingProjectId(editNewProjectId);
+      onEditNewProjectDone?.();
+    }
+  }, [editNewProjectId]);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);

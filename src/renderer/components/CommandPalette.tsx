@@ -7,6 +7,7 @@ import type { SessionInfo, LayoutMode } from '../../shared/types';
 interface CommandPaletteProps {
   onClose: () => void;
   onAddSession: (type: 'claude' | 'terminal') => void;
+  onNewProject: () => void;
   onShowSettings: () => void;
   onShowShortcuts: () => void;
 }
@@ -19,7 +20,7 @@ interface CommandItem {
   action: () => void;
 }
 
-export function CommandPalette({ onClose, onAddSession, onShowSettings, onShowShortcuts }: CommandPaletteProps) {
+export function CommandPalette({ onClose, onAddSession, onNewProject, onShowSettings, onShowShortcuts }: CommandPaletteProps) {
   const state = useSessionState();
   const dispatch = useSessionDispatch();
   const [query, setQuery] = useState('');
@@ -96,12 +97,7 @@ export function CommandPalette({ onClose, onAddSession, onShowSettings, onShowSh
       id: 'new-project',
       label: 'New Project',
       category: 'Action',
-      action: () => {
-        const existingCount = state.projects.filter((p) => p.name.startsWith('New Project')).length;
-        const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
-        dispatch({ type: 'ADD_PROJECT', project: { id: randomId(), name } });
-        onClose();
-      },
+      action: () => { onClose(); onNewProject(); },
     });
     items.push({
       id: 'show-all',

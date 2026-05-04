@@ -16,6 +16,7 @@ import { Settings } from './components/Settings';
 import { CommandPalette } from './components/CommandPalette';
 import { disposeTerminal } from './hooks/useTerminal';
 import type { LayoutMode, SessionType, SessionFilter } from '../shared/types';
+import { randomId } from './utils';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { theme } from './theme';
 
@@ -27,6 +28,15 @@ function AppInner() {
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [editNewProjectId, setEditNewProjectId] = useState<string | null>(null);
+
+  const createNewProject = useCallback(() => {
+    const existingCount = state.projects.filter((p) => p.name.startsWith('New Project')).length;
+    const name = existingCount === 0 ? 'New Project' : `New Project ${existingCount + 1}`;
+    const newId = randomId();
+    dispatch({ type: 'ADD_PROJECT', project: { id: newId, name } });
+    setEditNewProjectId(newId);
+  }, [state.projects, dispatch]);
 
   const projectSessions = getProjectSessions(state);
 
@@ -352,6 +362,8 @@ function AppInner() {
           onDeleteProject={deleteProject}
           onShowSettings={() => setShowSettings(true)}
           onShowShortcuts={() => setShowShortcutHelp(true)}
+          editNewProjectId={editNewProjectId}
+          onEditNewProjectDone={() => setEditNewProjectId(null)}
         />
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <SplitLayout />
@@ -372,6 +384,7 @@ function AppInner() {
         <CommandPalette
           onClose={() => setShowCommandPalette(false)}
           onAddSession={addSession}
+          onNewProject={createNewProject}
           onShowSettings={() => setShowSettings(true)}
           onShowShortcuts={() => setShowShortcutHelp(true)}
         />
