@@ -422,6 +422,23 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
           </>
         )}
 
+        {/* Claude status dashboard */}
+        <ClaudeStatusDrawer
+          sessions={state.sessions}
+          projects={projects}
+          activeSessionId={activeSessionId}
+          onSelectSession={(id) => {
+            const session = state.sessions.find((s) => s.id === id);
+            if (session) {
+              if (session.projectId !== activeProjectId) {
+                dispatch({ type: 'SET_ACTIVE_PROJECT', projectId: session.projectId });
+                setFocusedProjectId(session.projectId);
+              }
+              dispatch({ type: 'SET_ACTIVE', id });
+            }
+          }}
+        />
+
         {/* Bottom bar — settings + shortcuts */}
         <div
           style={{
@@ -1062,6 +1079,148 @@ function SearchBar({ searchInputRef, searchQuery, setSearchQuery, setSearchOpen 
             style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 11, fontFamily: 'system-ui' }}>Esc</span>
         )}
       </div>
+    </div>
+  );
+}
+
+function ClaudeStatusDrawer({ sessions, projects, activeSessionId, onSelectSession }: {
+  sessions: SessionInfo[];
+  projects: Array<{ id: string; name: string }>;
+  activeSessionId: string | null;
+  onSelectSession: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const claudeSessions = sessions.filter((s) => s.sessionType === 'claude');
+
+  // Auto-collapse when no Claude sessions
+  useEffect(() => {
+    if (claudeSessions.length === 0) setExpanded(false);
+  }, [claudeSessions.length]);
+
+  const runningCount = claudeSessions.filter((s) => s.status === 'running').length;
+  const idleCount = claudeSessions.filter((s) => s.status === 'idle').length;
+
+  // Group by project
+  const projectGroups = projects
+    .map((p) => ({ project: p, sessions: claudeSessions.filter((s) => s.projectId === p.id) }))
+    .filter((g) => g.sessions.length > 0);
+
+  return (
+    <div style={{ borderTop: `1px solid ${theme.borderSubtle}`, flexShrink: 0 }}>
+      <div
+        onClick={() => { if (claudeSessions.length > 0) setExpanded(!expanded); }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 12px', cursor: 'pointer',
+          fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
+          letterSpacing: 0.5, color: theme.tabInactiveText,
+          fontFamily: 'system-ui',
+        }}
+      >
+        <span style={{ fontSize: 10 }}>{expanded ? '▼' : '▶'}</span>
+        <span style={{ flex: 1 }}>Claude Sessions</span>
+        <span style={{
+          fontSize: 11, fontWeight: 500, textTransform: 'none', letterSpacing: 0,
+          color: theme.tabInactiveText,
+        }}>
+          {claudeSessions.length === 0
+            ? <span style={{ color: '#e5484d' }}>None</span>
+            : <>
+                {runningCount > 0 && <span style={{ color: '#30a46c' }}>{runningCount} active</span>}
+                {runningCount > 0 && idleCount > 0 && ' · '}
+                {idleCount > 0 && <span>{idleCount} idle</span>}
+              </>
+          }
+        </span>
+      </div>
+      {expanded && (
+        <div style={{ paddingBottom: 6, maxHeight: 200, overflowY: 'auto' }}>
+          {projectGroups.map((group) => (
+            <div key={group.project.id}>
+              <div style={{
+                padding: '8px 12px 4px',
+                fontSize: 11, fontFamily: 'system-ui', fontWeight: 600,
+                color: theme.tabInactiveText,
+                textTransform: 'uppercase', letterSpacing: 0.3,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {group.project.name}
+              </div>
+              {group.sessions.map((session) => {
+                const statusColor = session.status === 'running' ? '#30a46c' : session.status === 'idle' ? '#e5a100' : '#e5484d';
+                const statusLabel = session.status === 'running' ? 'Running' : session.status === 'idle' ? 'Idle' : 'Exited';
+                const ctx = session.ctxUsedPercent;
+                const ctxColor = ctx === null ? theme.tabInactiveText : ctx > 80 ? '#e5484d' : ctx > 60 ? '#e5a100' : theme.tabInactiveText;
+                return (
+                  <ClaudeStatusItem
+                    key={session.id}
+                    label={session.label}
+                    statusLabel={statusLabel}
+                    statusColor={statusColor}
+                    contextUsed={ctx}
+                    contextColor={ctxColor}
+                    isActive={session.id === activeSessionId}
+                    onClick={() => onSelectSession(session.id)}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClaudeStatusItem({ label, statusLabel, statusColor, contextUsed, contextColor, isActive, onClick }: {
+  label: string;
+  statusLabel: string;
+  statusColor: string;
+  contextUsed: number | null;
+  contextColor: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '8px 12px 8px 24px',
+        cursor: 'pointer',
+        background: isActive ? `${statusColor}12` : hovered ? theme.tabHoverBackground : 'transparent',
+        transition: 'background 0.1s',
+      }}
+    >
+      <span style={{
+        width: 8, height: 8, borderRadius: '50%',
+        background: statusColor, flexShrink: 0,
+      }} />
+      <span style={{
+        fontSize: 13, fontFamily: 'system-ui', color: theme.tabActiveText,
+        fontWeight: isActive ? 500 : 400,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+      }}>
+        {label}
+      </span>
+      <span style={{
+        fontSize: 11, fontFamily: 'system-ui', color: statusColor,
+        fontWeight: 500, flexShrink: 0,
+      }}>
+        {statusLabel}
+      </span>
+      {contextUsed !== null && (
+        <span style={{
+          fontSize: 11, fontFamily: 'system-ui', color: contextColor,
+          fontWeight: 500, flexShrink: 0, fontVariantNumeric: 'tabular-nums',
+          minWidth: 30, textAlign: 'right',
+        }}>
+          {contextUsed.toFixed(0)}%
+        </span>
+      )}
     </div>
   );
 }

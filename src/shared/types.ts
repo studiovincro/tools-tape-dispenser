@@ -13,6 +13,7 @@ export interface SessionInfo {
   projectId: string;
   sessionType: SessionType;
   contextPercent: number | null;
+  ctxUsedPercent: number | null;
   createdAt: number;
   colorIndex: number;
 }

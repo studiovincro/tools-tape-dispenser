@@ -39,7 +39,7 @@ function AppInner() {
     const suffix = type === 'claude' ? ' - Claude' : ' - Term';
     dispatch({
       type: 'ADD_SESSION',
-      session: { ...result, label: result.label + suffix, status: 'running', projectId: state.activeProjectId, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
+      session: { ...result, label: result.label + suffix, status: 'running', projectId: state.activeProjectId, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
     });
   }, [dispatch, state.activeProjectId, state.settings.defaultSessionType, state.settings.defaultProjectDir]);
 
@@ -95,7 +95,7 @@ function AppInner() {
         }, 3000),
       );
 
-      // Parse "Session: XX.X%" from Claude CLI status bar
+      // Parse "Session: XX.X%" and "Ctx Used: XX.X%" from Claude CLI status bar
       // Strip ANSI escape codes first since the status bar is styled
       const stripped = data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
       const sessionMatch = stripped.match(/Session:\s*([\d.]+)%/);
@@ -103,6 +103,13 @@ function AppInner() {
         const percent = parseFloat(sessionMatch[1]);
         if (!isNaN(percent)) {
           dispatch({ type: 'UPDATE_CONTEXT', id, contextPercent: percent });
+        }
+      }
+      const ctxMatch = stripped.match(/Ctx Used:\s*([\d.]+)%/);
+      if (ctxMatch) {
+        const percent = parseFloat(ctxMatch[1]);
+        if (!isNaN(percent)) {
+          dispatch({ type: 'UPDATE_CTX_USED', id, ctxUsedPercent: percent });
         }
       }
     });
@@ -207,7 +214,7 @@ function AppInner() {
             dispatch({
               type: 'ADD_SESSION',
               restoring: true,
-              session: { ...result, label: label || result.label, status: 'running', projectId: projectId || DEFAULT_PROJECT_ID, contextPercent: null, createdAt: Date.now(), colorIndex: ci },
+              session: { ...result, label: label || result.label, status: 'running', projectId: projectId || DEFAULT_PROJECT_ID, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: ci },
             });
             createdIds.push(result.id);
           }
@@ -253,7 +260,7 @@ function AppInner() {
             const result = await window.electronAPI.createSession(cwd);
             dispatch({
               type: 'ADD_SESSION',
-              session: { ...result, status: 'running', projectId: DEFAULT_PROJECT_ID, contextPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
+              session: { ...result, status: 'running', projectId: DEFAULT_PROJECT_ID, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: colorCounter.current++ },
             });
           }
           if (persisted.layoutMode) {
@@ -264,7 +271,7 @@ function AppInner() {
           const result = await window.electronAPI.createSession('/Users/vroman');
           dispatch({
             type: 'ADD_SESSION',
-            session: { ...result, status: 'running', projectId: DEFAULT_PROJECT_ID },
+            session: { ...result, status: 'running', projectId: DEFAULT_PROJECT_ID, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: 0 },
           });
         }
       } catch (err) {

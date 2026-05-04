@@ -145,7 +145,7 @@ export function SplitLayout() {
           dispatch({
             type: 'ADD_SESSION',
             restoring: true,
-            session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
+            session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
           });
           dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
           disposeTerminal(id);
@@ -267,7 +267,7 @@ export function SplitLayout() {
                     dispatch({
                       type: 'ADD_SESSION',
                       restoring: true,
-                      session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
+                      session: { ...result, label: session.label, status: 'running', projectId: session.projectId, contextPercent: null, ctxUsedPercent: null, createdAt: Date.now(), colorIndex: session.colorIndex },
                     });
                     dispatch({ type: 'SET_VISIBLE_SLOT', index, sessionId: result.id });
                     disposeTerminal(id);

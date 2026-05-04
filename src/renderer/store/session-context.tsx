@@ -23,6 +23,7 @@ type Action =
   | { type: 'REMOVE_FROM_STAGE'; id: string }
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
+  | { type: 'UPDATE_CTX_USED'; id: string; ctxUsedPercent: number }
   | { type: 'UPDATE_CWD'; id: string; cwd: string }
   | { type: 'GROUP_BY_TYPE' }
   | { type: 'RESTORE'; state: AppState }
@@ -363,6 +364,12 @@ function reducer(state: AppState, action: Action): AppState {
     case 'UPDATE_CONTEXT': {
       const sessions = state.sessions.map((s) =>
         s.id === action.id ? { ...s, contextPercent: action.contextPercent } : s,
+      );
+      return { ...state, sessions };
+    }
+    case 'UPDATE_CTX_USED': {
+      const sessions = state.sessions.map((s) =>
+        s.id === action.id ? { ...s, ctxUsedPercent: action.ctxUsedPercent } : s,
       );
       return { ...state, sessions };
     }
