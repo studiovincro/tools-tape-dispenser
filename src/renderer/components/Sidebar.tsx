@@ -97,7 +97,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
         { label: 'Rename', onClick: () => setEditingProjectId(projectId) },
         { label: 'Add Claude Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('claude'); } },
         { label: 'Add Terminal Session', onClick: () => { dispatch({ type: 'SET_ACTIVE_PROJECT', projectId }); onAddSession('terminal'); } },
-        ...(projectSessions.length > 0 ? [{ label: 'Close All Sessions', onClick: async () => {
+        ...(projectSessions.length > 0 ? [{ label: 'Close All Sessions', separator: true, onClick: async () => {
           const count = projectSessions.length;
           if (!window.confirm(`Close all ${count} session${count !== 1 ? 's' : ''} in this project?`)) return;
           for (const s of projectSessions) {
@@ -106,7 +106,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             dispatch({ type: 'REMOVE_SESSION', id: s.id });
           }
         }, danger: true }] : []),
-        ...(projects.length > 1 ? [{ label: 'Delete Project', onClick: () => onDeleteProject(projectId), danger: true }] : []),
+        ...(projects.length > 1 ? [{ label: 'Delete Project', separator: projectSessions.length === 0, onClick: () => onDeleteProject(projectId), danger: true }] : []),
       ],
     });
   };
@@ -128,7 +128,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             onClick: () => dispatch({ type: 'MOVE_SESSION', sessionId, toProjectId: p.id }),
           })),
         }] : []),
-        { label: 'Close Session', onClick: () => onCloseSession(sessionId), danger: true },
+        { label: 'Close Session', separator: true, onClick: () => onCloseSession(sessionId), danger: true },
       ],
     });
   };
