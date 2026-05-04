@@ -211,7 +211,7 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
               }}
             >
               <FilterPill value={sessionFilter} onChange={(f) => dispatch({ type: 'SET_SESSION_FILTER', filter: f })} />
-              <SidebarPill onClick={() => setSearchOpen(true)} label="Search" />
+              <SidebarPill onClick={() => { if (searchOpen) { setSearchOpen(false); setSearchQuery(''); } else { setSearchOpen(true); } }} label="Search" />
             </div>
 
             {/* Focused project name */}
