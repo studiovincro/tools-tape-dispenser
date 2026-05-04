@@ -92,8 +92,10 @@ export function Footer({ onCycleLayout }: FooterProps) {
             visibleCount={visibleCount}
             sessionCount={filteredSessions.length}
             maxCols={maxCols}
+            gridColumns={state.gridColumns}
             onSetPanes={(n) => dispatch({ type: 'SET_LAYOUT', mode: String(Math.min(n, 8)) as LayoutMode })}
             onShowAll={() => dispatch({ type: 'SET_LAYOUT', mode: String(Math.min(filteredSessions.length, 8)) as LayoutMode })}
+            onSetColumns={(n) => dispatch({ type: 'SET_GRID_COLUMNS', columns: n })}
           />
         )}
       </div>
@@ -102,12 +104,14 @@ export function Footer({ onCycleLayout }: FooterProps) {
 }
 
 
-function PaneLayoutMenu({ visibleCount, sessionCount, maxCols, onSetPanes, onShowAll }: {
+function PaneLayoutMenu({ visibleCount, sessionCount, maxCols, gridColumns, onSetPanes, onShowAll, onSetColumns }: {
   visibleCount: number;
   sessionCount: number;
   maxCols: number;
+  gridColumns: number | null;
   onSetPanes: (n: number) => void;
   onShowAll: () => void;
+  onSetColumns: (n: number | null) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -195,6 +199,40 @@ function PaneLayoutMenu({ visibleCount, sessionCount, maxCols, onSetPanes, onSho
               onClick={() => { onShowAll(); setMenuOpen(false); }}
             />
           )}
+
+          {/* Layout arrangements for current pane count */}
+          {visibleCount > 1 && (() => {
+            const arrangements: number[] = [];
+            for (let c = 1; c <= visibleCount; c++) {
+              if (visibleCount <= 8 || c <= 4 || c === visibleCount) arrangements.push(c);
+            }
+            return (
+              <>
+                <div style={{ height: 1, background: theme.borderSubtle, margin: '4px 0' }} />
+                <div style={{ padding: '4px 14px 2px', fontSize: 11, color: theme.tabInactiveText, fontFamily: 'system-ui', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Layout
+                </div>
+                {arrangements.map((cols) => {
+                  const rows = Math.ceil(visibleCount / cols);
+                  const isActive = gridColumns === cols || (gridColumns === null && cols === Math.min(maxCols, visibleCount));
+                  return (
+                    <PaneMenuItem
+                      key={`layout-${cols}`}
+                      label={`${cols} × ${rows}`}
+                      icon={<LayoutIcon count={visibleCount} maxCols={cols} />}
+                      active={isActive}
+                      onClick={() => { onSetColumns(cols); setMenuOpen(false); }}
+                    />
+                  );
+                })}
+                <PaneMenuItem
+                  label="Auto"
+                  active={gridColumns === null}
+                  onClick={() => { onSetColumns(null); setMenuOpen(false); }}
+                />
+              </>
+            );
+          })()}
         </div>
       )}
     </div>

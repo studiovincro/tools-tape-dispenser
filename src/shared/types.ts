@@ -50,6 +50,7 @@ export interface AppState {
   activeSessionId: string | null;
   visibleSessionIds: string[];
   layoutMode: LayoutMode;
+  gridColumns: number | null;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   sessionFilter: SessionFilter;

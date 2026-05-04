@@ -6,10 +6,16 @@ import { disposeTerminal, searchTerminal, clearTerminalSearch } from '../hooks/u
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
-function getGridStyle(paneCount: number, containerWidth: number, minPaneWidth: number): React.CSSProperties {
-  if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
+function getGridCols(paneCount: number, containerWidth: number, minPaneWidth: number, gridColumns: number | null): number {
+  if (paneCount <= 1) return 1;
+  if (gridColumns !== null) return Math.min(gridColumns, paneCount);
   const maxCols = Math.max(1, Math.floor(containerWidth / minPaneWidth));
-  const cols = Math.min(maxCols, paneCount);
+  return Math.min(maxCols, paneCount);
+}
+
+function getGridStyle(paneCount: number, containerWidth: number, minPaneWidth: number, gridColumns: number | null): React.CSSProperties {
+  if (paneCount <= 1) return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' };
+  const cols = getGridCols(paneCount, containerWidth, minPaneWidth, gridColumns);
   const rows = Math.ceil(paneCount / cols);
   return {
     gridTemplateColumns: `repeat(${cols}, 1fr)`,
@@ -17,10 +23,9 @@ function getGridStyle(paneCount: number, containerWidth: number, minPaneWidth: n
   };
 }
 
-function isLastPaneAlone(paneCount: number, containerWidth: number, minPaneWidth: number): boolean {
+function isLastPaneAlone(paneCount: number, containerWidth: number, minPaneWidth: number, gridColumns: number | null): boolean {
   if (paneCount <= 1) return false;
-  const maxCols = Math.max(1, Math.floor(containerWidth / minPaneWidth));
-  const cols = Math.min(maxCols, paneCount);
+  const cols = getGridCols(paneCount, containerWidth, minPaneWidth, gridColumns);
   return paneCount % cols !== 0;
 }
 
@@ -38,7 +43,7 @@ const statusLabels: Record<SessionInfo['status'], string> = {
 
 export function SplitLayout() {
   const state = useSessionState();
-  const { sessions, visibleSessionIds: rawVisibleIds, layoutMode, projects, activeSessionId, sessionFilter, settings, activeProjectId } = state;
+  const { sessions, visibleSessionIds: rawVisibleIds, layoutMode, gridColumns, projects, activeSessionId, sessionFilter, settings, activeProjectId } = state;
   const dispatch = useSessionDispatch();
 
   // Only show sessions belonging to the active project
@@ -213,7 +218,7 @@ export function SplitLayout() {
           width: '100%',
           height: '100%',
           display: 'grid',
-          ...getGridStyle(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450),
+          ...getGridStyle(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450, gridColumns),
           gap: isMultiPane ? 2 : 0,
           background: isMultiPane ? theme.borderSubtle : theme.appBackground,
         }}
@@ -226,7 +231,7 @@ export function SplitLayout() {
             <PaneSlot
               key={`slot-${index}`}
               index={index}
-              spanFullWidth={index === visibleSessionIds.length - 1 && isLastPaneAlone(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450)}
+              spanFullWidth={index === visibleSessionIds.length - 1 && isLastPaneAlone(visibleSessionIds.length, containerWidth, settings?.minPaneWidth || 450, gridColumns)}
               isFocused={isFocused}
               isMultiPane={isMultiPane}
               paneColor={paneColor}

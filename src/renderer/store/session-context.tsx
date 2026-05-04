@@ -28,7 +28,8 @@ type Action =
   | { type: 'RESTORE'; state: AppState }
   | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
-  | { type: 'RESTORE_LAYOUTS'; projectLayouts: Record<string, { visibleSessionIds: string[]; layoutMode: LayoutMode; activeSessionId: string | null }> };
+  | { type: 'RESTORE_LAYOUTS'; projectLayouts: Record<string, { visibleSessionIds: string[]; layoutMode: LayoutMode; activeSessionId: string | null }> }
+  | { type: 'SET_GRID_COLUMNS'; columns: number | null };
 
 const initialState: AppState = {
   projects: [{ id: DEFAULT_PROJECT_ID, name: 'General' }],
@@ -37,6 +38,7 @@ const initialState: AppState = {
   activeSessionId: null,
   visibleSessionIds: [],
   layoutMode: '1',
+  gridColumns: null,
   sidebarCollapsed: false,
   sidebarWidth: 240,
   sessionFilter: 'all',
@@ -288,8 +290,11 @@ function reducer(state: AppState, action: Action): AppState {
           : replaceLastVisible(state.visibleSessionIds, action.id, maxPanes(state.layoutMode));
       return { ...state, activeSessionId: action.id, visibleSessionIds };
     }
+    case 'SET_GRID_COLUMNS': {
+      return { ...state, gridColumns: action.columns };
+    }
     case 'SET_LAYOUT': {
-      const newState = { ...state, layoutMode: action.mode };
+      const newState = { ...state, layoutMode: action.mode, gridColumns: null };
       const max = maxPanes(action.mode);
       const filtered = getFilteredProjectSessions(newState);
       // Preserve existing order — trim if shrinking, add from filtered if growing
