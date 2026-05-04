@@ -10,11 +10,16 @@ A desktop app for managing multiple Claude Code and terminal sessions in a singl
 - **Session persistence** - Layout, pane order, session names, colours, and settings restored on restart
 - **Terminal content preservation** - xterm instances survive pane swaps and project moves without losing content
 - **Settings panel** - Configure min pane width, terminal font size, default session type, default directory, and subscription date (Cmd+,)
+- **Command palette** - Cmd+Shift+P to search sessions, switch projects, and run actions instantly
+- **Terminal search** - Cmd+F to search output within the focused pane with match navigation
+- **Claude status dashboard** - Collapsible sidebar drawer showing all Claude sessions with live status and context window usage
 - **Footer dashboard** - Subscription renewal countdown, session reset timer, context capacity gauge — all with traffic light colour coding
-- **Search** - Double-tap Shift to search across all sessions and projects
-- **Context menus** - Right-click projects, sessions, or pane headers for quick actions (including Close All Sessions)
-- **Drag and drop** - Reorder sessions in the sidebar or drag them onto specific panes
-- **Session filtering** - Toggle between All, Claude, and Terminal views
+- **Pane layout menu** - Choose pane count, show all, and pick column arrangements from a single menu
+- **Project focus mode** - Double-click a project to enter single-project view with dedicated toolbar
+- **Search** - Sidebar search to filter sessions and projects by name
+- **Context menus** - Right-click projects, sessions, or pane headers for quick actions (including Close All Sessions, Restart Session)
+- **Drag and drop** - Reorder sessions in the sidebar, drag pane headers to swap positions
+- **Session filtering** - All Sessions / Claude / Terminal filter with red indicator when active
 - **Keyboard shortcuts** - Full keyboard control (Cmd+? to see all shortcuts)
 - **Security hardened** - Sandboxed renderer, env allowlist, validated IPC, Electron Fuses
 
@@ -85,16 +90,17 @@ Open via the **Settings** pill in the sidebar or **Cmd+,**:
 
 | Shortcut | Action |
 |---|---|
+| Cmd+Shift+P | Command palette |
 | Cmd+N | New Claude session |
 | Cmd+Shift+N | New terminal session |
 | Cmd+W | Close active session |
+| Cmd+F | Search in terminal |
 | Cmd+\\ | Cycle layout |
 | Cmd+1-9 | Jump to session |
 | Cmd+Shift+] / [ | Next / previous session |
 | Cmd+B | Toggle sidebar |
 | Cmd+, | Open settings |
 | Cmd+? | Show shortcuts help |
-| Double-Shift | Open search |
 | Esc | Close search / menus / modals |
 
 ## Build

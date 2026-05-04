@@ -90,10 +90,21 @@ src/
 
 ### Footer
 - **Subscription pill**: days to next monthly renewal (green >7d, amber 3–7d, red <3d)
-- **Countdown timer**: click to set 30m–5h timer for session reset tracking (traffic light colors)
+- **Countdown timer**: click to set 30m–5h timer for session reset tracking (traffic light colors, persists across restarts)
 - **Session capacity pill**: context usage remaining (green >40%, amber 20–40%, red <20%)
-- **Filter toggle**: All / Claude / Terminal session filter
-- **Layout button**: cycle pane count with grid icon
+- **Pane layout menu**: single button with popup for pane count (1–15), show all, and column arrangement picker
+
+### Claude Status Dashboard
+- Collapsible drawer in sidebar showing all Claude sessions across all projects
+- Shows status (Running/Idle/Exited) with coloured dots, context window used %
+- Grouped by project, click to jump to session
+- Shows "None" in red when no Claude sessions exist
+
+### Command Palette
+- **Cmd+Shift+P** opens searchable overlay
+- Search sessions by name, switch projects, run actions
+- Arrow keys to navigate, Enter to select, Esc to close
+- Actions: new session, settings, shortcuts, show all panes
 
 ## Commands
 
@@ -113,9 +124,11 @@ yarn make        # Create distributable (dmg/zip)
 
 ## Keyboard Shortcuts
 
+- Cmd+Shift+P: Command palette
 - Cmd+N: New Claude session
 - Cmd+Shift+N: New terminal session
 - Cmd+W: Close active session (with confirmation)
+- Cmd+F: Search in terminal (focused pane)
 - Cmd+\\: Cycle layout (pane count)
 - Cmd+1-9: Jump to session N
 - Cmd+Shift+]/[: Next/previous session

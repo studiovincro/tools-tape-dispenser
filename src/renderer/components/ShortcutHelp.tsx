@@ -6,11 +6,14 @@ interface ShortcutHelpProps {
 }
 
 const shortcuts = [
+  { keys: '⌘ ⇧ P', action: 'Command palette' },
   { keys: '⌘ N', action: 'New Claude session' },
   { keys: '⌘ ⇧ N', action: 'New terminal session' },
   { keys: '⌘ W', action: 'Close active session' },
+  { keys: '⌘ F', action: 'Search in terminal' },
   { keys: '⌘ B', action: 'Toggle sidebar' },
   { keys: '⌘ \\', action: 'Cycle layout' },
+  { keys: '⌘ ,', action: 'Open settings' },
   { keys: '⌘ ⇧ ]', action: 'Next session' },
   { keys: '⌘ ⇧ [', action: 'Previous session' },
   { keys: '⌘ 1–9', action: 'Jump to session' },
