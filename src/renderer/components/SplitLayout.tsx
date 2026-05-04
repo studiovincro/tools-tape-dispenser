@@ -37,8 +37,13 @@ const statusLabels: Record<SessionInfo['status'], string> = {
 };
 
 export function SplitLayout() {
-  const { sessions, visibleSessionIds, layoutMode, projects, activeSessionId, sessionFilter, settings } = useSessionState();
+  const state = useSessionState();
+  const { sessions, visibleSessionIds: rawVisibleIds, layoutMode, projects, activeSessionId, sessionFilter, settings, activeProjectId } = state;
   const dispatch = useSessionDispatch();
+
+  // Only show sessions belonging to the active project
+  const projectSessionIds = new Set(sessions.filter((s) => s.projectId === activeProjectId).map((s) => s.id));
+  const visibleSessionIds = rawVisibleIds.filter((id) => projectSessionIds.has(id));
   const isMultiPane = visibleSessionIds.length > 1;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const [containerWidth, setContainerWidth] = useState(1200);
@@ -234,7 +239,7 @@ export function SplitLayout() {
       </div>
 
       {sessions
-        .filter((s) => !visibleSessionIds.includes(s.id))
+        .filter((s) => s.projectId === activeProjectId && !visibleSessionIds.includes(s.id))
         .map((s) => (
           <div
             key={s.id}

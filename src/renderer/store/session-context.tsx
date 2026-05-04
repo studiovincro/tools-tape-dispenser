@@ -276,8 +276,9 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...newState, sessions, activeSessionId, visibleSessionIds: visible, layoutMode };
     }
     case 'SET_ACTIVE': {
-      // Ignore if session doesn't exist (e.g. removed session via bubbled click)
-      if (!state.sessions.some((s) => s.id === action.id)) return state;
+      // Ignore if session doesn't exist or belongs to a different project
+      const session = state.sessions.find((s) => s.id === action.id);
+      if (!session || session.projectId !== state.activeProjectId) return state;
       const visibleSessionIds = state.layoutMode === '1'
         ? [action.id]
         : state.visibleSessionIds.includes(action.id)
@@ -305,7 +306,12 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...newState, visibleSessionIds: visible };
     }
     case 'SET_VISIBLE': {
-      return { ...state, visibleSessionIds: action.ids };
+      // Filter to only active project sessions
+      const validIds = action.ids.filter((id) => {
+        const s = state.sessions.find((sess) => sess.id === id);
+        return s && s.projectId === state.activeProjectId;
+      });
+      return { ...state, visibleSessionIds: validIds };
     }
     case 'REMOVE_FROM_STAGE': {
       const visible = state.visibleSessionIds.filter((id) => id !== action.id);
@@ -317,6 +323,9 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, visibleSessionIds: visible, layoutMode, activeSessionId };
     }
     case 'SET_VISIBLE_SLOT': {
+      // Only allow sessions from the active project onto the stage
+      const slotSession = state.sessions.find((s) => s.id === action.sessionId);
+      if (!slotSession || slotSession.projectId !== state.activeProjectId) return state;
       const visible = [...state.visibleSessionIds];
       // Remove the session from its current slot if it's already visible
       const existingIdx = visible.indexOf(action.sessionId);
