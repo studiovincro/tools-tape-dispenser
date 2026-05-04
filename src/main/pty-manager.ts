@@ -64,15 +64,16 @@ export class PtyManager {
       throw new Error(`Maximum ${MAX_SESSIONS} concurrent sessions reached`);
     }
 
-    // Validate cwd is a real, accessible directory
-    const resolved = path.resolve(cwd);
+    // Validate cwd is a real, accessible directory — resolve symlinks to canonical path
+    let resolved: string;
     try {
+      resolved = fs.realpathSync(path.resolve(cwd));
       const stat = fs.statSync(resolved);
       if (!stat.isDirectory()) {
         throw new Error(`Not a directory: ${resolved}`);
       }
     } catch (err) {
-      throw new Error(`Invalid session directory: ${resolved}`);
+      throw new Error(`Invalid session directory: ${cwd}`);
     }
 
     // Validate sessionType to prevent arbitrary command injection
@@ -114,7 +115,7 @@ export class PtyManager {
       if (osc7Match) {
         try {
           const newCwd = decodeURIComponent(osc7Match[1]);
-          if (newCwd !== managed.cwd) {
+          if (newCwd.startsWith('/') && newCwd !== managed.cwd) {
             managed.cwd = newCwd;
             if (this.win && !this.win.isDestroyed()) {
               this.win.webContents.send('pty:cwd', id, newCwd);

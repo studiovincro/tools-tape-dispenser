@@ -13,8 +13,10 @@ try {
 // Fix PATH for packaged apps — Finder/Dock launch gives a minimal PATH
 // that won't include user-installed tools like claude, homebrew, nvm, etc.
 // Spawn a login shell to get the full PATH from shell profiles.
+const ALLOWED_SHELLS_FOR_PATH = ['/bin/bash', '/bin/zsh', '/bin/sh', '/bin/fish', '/usr/local/bin/fish', '/opt/homebrew/bin/fish'];
 try {
-  const shell = process.env.SHELL || '/bin/zsh';
+  const requestedShell = process.env.SHELL || '/bin/zsh';
+  const shell = ALLOWED_SHELLS_FOR_PATH.includes(requestedShell) ? requestedShell : '/bin/zsh';
   const fullPath = execSync(`${shell} -ilc 'echo -n $PATH'`, { encoding: 'utf8', timeout: 5000 });
   if (fullPath) process.env.PATH = fullPath;
 } catch {}

@@ -42,26 +42,26 @@ Product backlog and roadmap for features, improvements, and hardening. Pick from
 
 ### Critical
 
-- [ ] **Symlink traversal in CWD** — `pty-manager.ts` uses `path.resolve()` not `fs.realpathSync()`; allows spawning PTY in arbitrary directories via symlinks. Fix: resolve symlinks to canonical path before spawning.
-- [ ] **Shell whitelist for execSync** — `main.ts` uses `$SHELL` without validating it's a known shell. Fix: whitelist `/bin/zsh`, `/bin/bash`, `/bin/sh`, `/bin/fish` etc.
+- [x] **Symlink traversal in CWD** — `pty-manager.ts` now uses `fs.realpathSync()` to resolve symlinks to canonical path before spawning.
+- [x] **Shell whitelist for execSync** — `main.ts` now validates `$SHELL` against allowed shells before execSync.
 
 ### High
 
-- [ ] **Session ID validation in IPC handlers** — `ipc-handlers.ts` doesn't call `hasSession()` before writing/resizing/killing. Fix: add boundary checks in all handlers.
-- [ ] **session:write size validation** — No max size check on data parameter; could cause memory exhaustion. Fix: reject data > 64KB.
-- [ ] **store:save property whitelist** — Accepts arbitrary extra session properties. Fix: whitelist allowed keys explicitly.
+- [x] **Session ID validation in IPC handlers** — All IPC handlers now check `hasSession()` before writing/resizing/killing.
+- [x] **session:write size validation** — Rejects data > 64KB and validates types at boundary.
+- [x] **store:save property whitelist** — Strips unexpected session properties before persisting.
 
 ### Medium
 
-- [ ] **OSC 7 path validation** — Decoded paths not validated as absolute before sending to renderer. Fix: check `startsWith('/')`.
-- [ ] **Weak randomId fallback** — `Math.random()` fallback in renderer `utils.ts`. Fix: remove fallback or use `crypto.getRandomValues()`.
-- [ ] **CSP hardening** — Add `frame-ancestors 'none'`, `object-src 'none'` to `index.html`.
+- [x] **OSC 7 path validation** — Decoded paths validated as absolute (`startsWith('/')`) before accepting.
+- [x] **Weak randomId fallback** — Removed `Math.random()` fallback; uses `crypto.randomUUID()` directly.
+- [x] **CSP hardening** — Added `frame-ancestors 'none'`, `object-src 'none'`, `connect-src 'self'`, Referrer-Policy.
 - [ ] **IPC rate limiting** — No throttling on resize/write calls. Fix: add rate limits in preload or handlers.
 
 ### Low
 
 - [ ] **Label/name length validation** — No max length on session labels or project names.
-- [ ] **Referrer-Policy header** — Add `no-referrer` meta tag to `index.html`.
+- [x] **Referrer-Policy header** — Added `no-referrer` meta tag to `index.html`.
 - [ ] **ASAR unpacking trust** — `node-pty` unpacked from ASAR; verify native module builds from trusted sources.
 
 ---

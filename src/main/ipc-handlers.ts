@@ -10,22 +10,28 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
   });
 
   ipcMain.on('session:write', (_event, { id, data }: { id: string; data: string }) => {
+    if (typeof id !== 'string' || typeof data !== 'string' || data.length > 65536) return;
+    if (!ptyManager.hasSession(id)) return;
     ptyManager.writeToSession(id, data);
   });
 
   ipcMain.on('session:resize', (_event, { id, cols, rows }: { id: string; cols: number; rows: number }) => {
+    if (typeof id !== 'string' || !ptyManager.hasSession(id)) return;
     ptyManager.resizeSession(id, cols, rows);
   });
 
   ipcMain.handle('session:kill', (_event, { id }: { id: string }) => {
+    if (typeof id !== 'string' || !ptyManager.hasSession(id)) return;
     ptyManager.killSession(id);
   });
 
   ipcMain.handle('session:buffer', (_event, { id }: { id: string }) => {
+    if (typeof id !== 'string' || !ptyManager.hasSession(id)) return '';
     return ptyManager.getBuffer(id);
   });
 
   ipcMain.handle('session:cwd', (_event, { id }: { id: string }) => {
+    if (typeof id !== 'string' || !ptyManager.hasSession(id)) return null;
     return ptyManager.getCwd(id);
   });
 
@@ -52,10 +58,17 @@ export function registerIpcHandlers(ptyManager: PtyManager): void {
     }
     const layoutMode = typeof payload.layoutMode === 'string' && /^[1-8]$/.test(payload.layoutMode)
       ? payload.layoutMode : '1';
+    const SESSION_ALLOWED_KEYS = ['id', 'cwd', 'projectId', 'sessionType', 'label', 'colorIndex'];
     for (const s of payload.sessions) {
       if (!s || typeof s !== 'object' || typeof (s as any).cwd !== 'string') {
         console.warn('store:save: invalid session entry');
         return;
+      }
+      // Strip unexpected properties before persisting
+      for (const key of Object.keys(s as object)) {
+        if (!SESSION_ALLOWED_KEYS.includes(key)) {
+          delete (s as any)[key];
+        }
       }
     }
     const win = BrowserWindow.getFocusedWindow();
