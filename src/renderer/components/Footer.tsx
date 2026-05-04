@@ -47,7 +47,10 @@ export function Footer({ onCycleLayout }: FooterProps) {
   const projectSessions = getProjectSessions(state);
   const filteredSessions = getFilteredProjectSessions(state);
   const showLayoutButton = filteredSessions.length > 0;
+  const visibleCount = state.visibleSessionIds.length;
+  const canShowAll = filteredSessions.length > visibleCount;
   const [layoutHovered, setLayoutHovered] = useState(false);
+  const [showAllHovered, setShowAllHovered] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -86,6 +89,32 @@ export function Footer({ onCycleLayout }: FooterProps) {
 
       {/* Right: layout toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {filteredSessions.length > 0 && (
+          <button
+            onClick={() => {
+              const layout = String(Math.min(filteredSessions.length, 8)) as LayoutMode;
+              dispatch({ type: 'SET_LAYOUT', mode: layout });
+            }}
+            onMouseEnter={() => setShowAllHovered(true)}
+            onMouseLeave={() => setShowAllHovered(false)}
+            style={{
+              background: 'transparent',
+              border: showAllHovered ? `1px solid ${theme.borderSubtle}` : '1px solid transparent',
+              color: showAllHovered ? theme.buttonMutedHover : theme.buttonMuted,
+              cursor: 'pointer',
+              padding: '3px 8px',
+              borderRadius: 4,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              transition: 'border-color 0.12s, color 0.12s',
+            }}
+            title="Show all sessions"
+          >
+            <LayoutIcon count={Math.min(filteredSessions.length, 8)} maxCols={maxCols} />
+            <span style={{ fontSize: 13 }}>All {filteredSessions.length}</span>
+          </button>
+        )}
         {showLayoutButton && (
           <button
             onClick={onCycleLayout}
@@ -105,8 +134,8 @@ export function Footer({ onCycleLayout }: FooterProps) {
             }}
             title="Cycle layout (Cmd+\\)"
           >
-            <LayoutIcon count={state.visibleSessionIds.length || 1} maxCols={maxCols} />
-            <span style={{ fontSize: 13 }}>{state.visibleSessionIds.length || 1} pane{(state.visibleSessionIds.length || 1) !== 1 ? 's' : ''}</span>
+            <LayoutIcon count={visibleCount || 1} maxCols={maxCols} />
+            <span style={{ fontSize: 13 }}>{visibleCount || 1} pane{(visibleCount || 1) !== 1 ? 's' : ''}</span>
           </button>
         )}
       </div>
