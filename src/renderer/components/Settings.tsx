@@ -199,18 +199,24 @@ export function Settings({ settings, onSave, onClose, onPickDirectory }: Setting
             </div>
           </div>
 
-          {/* Subscription end date */}
-          <SettingsRow label="Subscription start date" desc="Monthly renewal date for your subscription">
-            <input
-              type="date"
-              value={subscriptionEndDate}
-              onChange={(e) => setSubscriptionEndDate(e.target.value)}
-              style={{
-                ...inputStyle,
-                width: 150,
-              }}
-            />
-          </SettingsRow>
+          {/* Subscription start date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '14px 0', borderTop: `1px solid ${theme.borderSubtle}` }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={labelStyle}>Subscription start date</div>
+              <div style={descStyle}>Monthly renewal date for your subscription</div>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <input
+                type="date"
+                value={subscriptionEndDate}
+                onChange={(e) => setSubscriptionEndDate(e.target.value)}
+                style={{
+                  ...inputStyle,
+                  width: 150,
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Footer buttons */}
