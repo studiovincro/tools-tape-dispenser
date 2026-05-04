@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect, type RefCallback } fro
 import { TerminalPane } from './TerminalPane';
 import { ContextMenu, type MenuItem } from './ContextMenu';
 import { useSessionState, useSessionDispatch } from '../store/session-context';
-import { disposeTerminal } from '../hooks/useTerminal';
+import { disposeTerminal, searchTerminal, clearTerminalSearch } from '../hooks/useTerminal';
 import type { LayoutMode, SessionInfo } from '../../shared/types';
 import { theme } from '../theme';
 
@@ -46,8 +46,28 @@ export function SplitLayout() {
   const visibleSessionIds = rawVisibleIds.filter((id) => projectSessionIds.has(id));
   const isMultiPane = visibleSessionIds.length > 1;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const [paneSearchId, setPaneSearchId] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(1200);
   const observerRef = useRef<ResizeObserver | null>(null);
+
+  // Cmd+F to search in active pane
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        if (activeSessionId && visibleSessionIds.includes(activeSessionId)) {
+          setPaneSearchId((prev) => prev === activeSessionId ? null : activeSessionId);
+        }
+      }
+      if (e.key === 'Escape' && paneSearchId) {
+        e.preventDefault();
+        clearTerminalSearch(paneSearchId);
+        setPaneSearchId(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeSessionId, visibleSessionIds, paneSearchId]);
 
   const containerRef: RefCallback<HTMLDivElement> = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) {
@@ -222,6 +242,12 @@ export function SplitLayout() {
                   onClose={() => dispatch({ type: 'REMOVE_FROM_STAGE', id })}
                   onDoubleClick={() => focusPane(id)}
                   onContextMenu={(e) => showPaneMenu(e, id, index)}
+                />
+              )}
+              {paneSearchId === id && (
+                <PaneSearchBar
+                  sessionId={id}
+                  onClose={() => { clearTerminalSearch(id); setPaneSearchId(null); }}
                 />
               )}
               <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -426,6 +452,71 @@ function PaneSlot({
       }}
     >
       {children}
+    </div>
+  );
+}
+
+function PaneSearchBar({ sessionId, onClose }: { sessionId: string; onClose: () => void }) {
+  const [term, setTerm] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (term) {
+      searchTerminal(sessionId, term, true);
+    } else {
+      clearTerminalSearch(sessionId);
+    }
+  }, [term, sessionId]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && term) {
+      e.preventDefault();
+      searchTerminal(sessionId, term, !e.shiftKey);
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '4px 8px',
+        background: theme.tabBarBackground,
+        borderBottom: `1px solid ${theme.borderSubtle}`,
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ color: theme.tabInactiveText, fontSize: 12, flexShrink: 0 }}>🔍</span>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Find in terminal..."
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        onKeyDown={handleKeyDown}
+        style={{
+          flex: 1, border: 'none', outline: 'none', fontSize: 13,
+          fontFamily: 'system-ui', background: 'transparent',
+          color: theme.tabActiveText, padding: '2px 0',
+        }}
+      />
+      <span style={{ fontSize: 11, color: theme.tabInactiveText, flexShrink: 0 }}>
+        ↵ next · ⇧↵ prev
+      </span>
+      <span
+        onClick={onClose}
+        style={{ color: theme.buttonMuted, cursor: 'pointer', fontSize: 11, fontFamily: 'system-ui', flexShrink: 0 }}
+      >
+        Esc
+      </span>
     </div>
   );
 }

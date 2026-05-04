@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { SearchAddon } from '@xterm/addon-search';
 import type { ElectronAPI } from '../../preload/preload';
 import { theme } from '../theme';
 
@@ -16,6 +17,7 @@ declare global {
 const registry = new Map<string, {
   terminal: Terminal;
   fitAddon: FitAddon;
+  searchAddon: SearchAddon;
   element: HTMLElement;
   cleanup: () => void;
 }>();
@@ -28,6 +30,22 @@ export function disposeTerminal(sessionId: string): void {
     entry.terminal.dispose();
     registry.delete(sessionId);
   }
+}
+
+/** Search within a terminal's output */
+export function searchTerminal(sessionId: string, term: string, findNext: boolean = true): boolean {
+  const entry = registry.get(sessionId);
+  if (!entry || !term) return false;
+  if (findNext) {
+    return entry.searchAddon.findNext(term, { caseSensitive: false, decorations: { activeMatchColorOverviewRuler: '#e5a100', matchOverviewRuler: '#888' } });
+  }
+  return entry.searchAddon.findPrevious(term, { caseSensitive: false });
+}
+
+/** Clear search highlights */
+export function clearTerminalSearch(sessionId: string): void {
+  const entry = registry.get(sessionId);
+  if (entry) entry.searchAddon.clearDecorations();
 }
 
 export function useTerminal(sessionId: string | null, visible: boolean = true, sessionType: string = 'claude', fontSize: number = 13) {
@@ -51,6 +69,7 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       // Create new terminal
       const terminal = new Terminal({
         cursorBlink: true,
+        allowProposedApi: true,
         fontSize,
         fontFamily: 'Menlo, Monaco, "Courier New", monospace',
         theme: {
@@ -62,7 +81,9 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       });
 
       const fitAddon = new FitAddon();
+      const searchAddon = new SearchAddon();
       terminal.loadAddon(fitAddon);
+      terminal.loadAddon(searchAddon);
       terminal.open(container);
 
       fitAddonRef.current = fitAddon;
@@ -100,7 +121,7 @@ export function useTerminal(sessionId: string | null, visible: boolean = true, s
       }
 
       const element = container.querySelector('.xterm') as HTMLElement;
-      entry = { terminal, fitAddon, element, cleanup: unsubData };
+      entry = { terminal, fitAddon, searchAddon, element, cleanup: unsubData };
       registry.set(sessionId, entry);
     }
 

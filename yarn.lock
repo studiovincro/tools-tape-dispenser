@@ -2024,6 +2024,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xterm/addon-search@npm:^0.16.0":
+  version: 0.16.0
+  resolution: "@xterm/addon-search@npm:0.16.0"
+  checksum: 10c0/bcd4c27852df1a9cfffb112174a510b0a410fc72f7f2ca431ae2ed3414c575cb1022795d491c7111382195b2d7f299b1f43d69674905c84cf31bafec7e48be9f
+  languageName: node
+  linkType: hard
+
 "@xterm/xterm@npm:^6.0.0":
   version: 6.0.0
   resolution: "@xterm/xterm@npm:6.0.0"
@@ -7121,6 +7128,7 @@ __metadata:
     "@typescript-eslint/parser": "npm:^5.62.0"
     "@vitejs/plugin-react": "npm:^4"
     "@xterm/addon-fit": "npm:^0.11.0"
+    "@xterm/addon-search": "npm:^0.16.0"
     "@xterm/xterm": "npm:^6.0.0"
     electron: "npm:41.5.0"
     electron-squirrel-startup: "npm:^1.0.1"
