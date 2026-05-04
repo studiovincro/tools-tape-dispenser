@@ -218,7 +218,10 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
             <div
               onContextMenu={(e) => showProjectMenu(e, focusedProjectId)}
               style={{
-                padding: '10px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 12px 10px 12px',
                 borderBottom: `1px solid ${theme.borderSubtle}`,
                 borderLeft: `3px solid ${theme.activeTabIndicator}`,
                 background: theme.tabActiveBackground,
@@ -231,10 +234,21 @@ export function Sidebar({ onAddSession, onCloseSession, onRenameSession, onDelet
                   fontSize: 14, fontWeight: 600, color: theme.tabActiveText,
                   fontFamily: 'system-ui',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  display: 'block',
+                  flex: 1,
                 }}
               >
                 {projects.find((p) => p.id === focusedProjectId)?.name ?? 'Project'}
+              </span>
+              <span
+                style={{
+                  fontSize: 12, fontWeight: 500, color: theme.tabInactiveText,
+                  background: theme.borderSubtle,
+                  minWidth: 20, height: 20, borderRadius: 10,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 6px', fontFamily: 'system-ui',
+                }}
+              >
+                {(() => { const t = getProjectSessions(state, focusedProjectId); return t.length; })()}
               </span>
             </div>
 
@@ -700,7 +714,7 @@ function ProjectTree({
 
       {/* Session list with drop zones */}
       {(hideHeader || expanded) && (
-        <div style={{ paddingLeft: 0 }}>
+        <div style={{ marginLeft: hideHeader ? -21 : 0 }}>
           {sessions.map((session, idx) => {
             const isVisible = visibleSessionIds.includes(session.id);
             const paneColor = theme.paneIndicatorColors[session.colorIndex % theme.paneIndicatorColors.length];
