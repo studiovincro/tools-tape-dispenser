@@ -23,6 +23,7 @@ type Action =
   | { type: 'REMOVE_FROM_STAGE'; id: string }
   | { type: 'UPDATE_STATUS'; id: string; status: SessionInfo['status'] }
   | { type: 'UPDATE_CONTEXT'; id: string; contextPercent: number }
+  | { type: 'UPDATE_CWD'; id: string; cwd: string }
   | { type: 'RESTORE'; state: AppState }
   | { type: 'RESTORE_VIEW'; layoutMode: LayoutMode; sessionFilter: SessionFilter; visibleSessionIds: string[]; activeSessionId: string | null }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
@@ -345,6 +346,12 @@ function reducer(state: AppState, action: Action): AppState {
     case 'UPDATE_CONTEXT': {
       const sessions = state.sessions.map((s) =>
         s.id === action.id ? { ...s, contextPercent: action.contextPercent } : s,
+      );
+      return { ...state, sessions };
+    }
+    case 'UPDATE_CWD': {
+      const sessions = state.sessions.map((s) =>
+        s.id === action.id ? { ...s, cwd: action.cwd } : s,
       );
       return { ...state, sessions };
     }

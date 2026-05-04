@@ -106,6 +106,10 @@ function AppInner() {
       }
     });
 
+    const unsubCwd = window.electronAPI.onPtyCwd((id, cwd) => {
+      dispatch({ type: 'UPDATE_CWD', id, cwd });
+    });
+
     const unsubExit = window.electronAPI.onPtyExit((id) => {
       dispatch({ type: 'UPDATE_STATUS', id, status: 'exited' });
       const existing = idleTimers.current.get(id);
@@ -114,6 +118,7 @@ function AppInner() {
 
     return () => {
       unsubData();
+      unsubCwd();
       unsubExit();
       idleTimers.current.forEach((t) => clearTimeout(t));
     };

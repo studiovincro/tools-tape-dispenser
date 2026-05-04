@@ -116,9 +116,7 @@ export function SplitLayout() {
         }},
         { label: 'Restart Session', separator: true, danger: true, onClick: async () => {
           if (!window.confirm(`Restart "${session.label}"? This will kill the current session and start a new one.`)) return;
-          let currentCwd = session.cwd;
-          try { currentCwd = await window.electronAPI.getSessionCwd(id) || session.cwd; } catch {}
-          const result = await window.electronAPI.createSession(currentCwd, session.sessionType);
+          const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
           dispatch({
             type: 'ADD_SESSION',
             restoring: true,
@@ -234,9 +232,7 @@ export function SplitLayout() {
                   status={session?.status}
                   fontSize={settings.terminalFontSize}
                   onRestart={session ? async () => {
-                    let currentCwd = session.cwd;
-                    try { currentCwd = await window.electronAPI.getSessionCwd(id) || session.cwd; } catch {}
-                    const result = await window.electronAPI.createSession(currentCwd, session.sessionType);
+                    const result = await window.electronAPI.createSession(session.cwd, session.sessionType);
                     dispatch({
                       type: 'ADD_SESSION',
                       restoring: true,

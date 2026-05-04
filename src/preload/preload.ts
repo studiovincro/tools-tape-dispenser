@@ -36,6 +36,7 @@ export interface ElectronAPI {
   getSessionCwd(id: string): Promise<string | null>;
   pickDirectory(): Promise<string | null>;
   onPtyData(callback: (id: string, data: string) => void): () => void;
+  onPtyCwd(callback: (id: string, cwd: string) => void): () => void;
   onPtyExit(callback: (id: string, code: number) => void): () => void;
   saveState(payload: SaveStatePayload): Promise<void>;
   loadState(): Promise<LoadStateResult>;
@@ -74,6 +75,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event: Electron.IpcRendererEvent, id: string, data: string) => callback(id, data);
     ipcRenderer.on('pty:data', handler);
     return () => ipcRenderer.removeListener('pty:data', handler);
+  },
+
+  onPtyCwd(callback: (id: string, cwd: string) => void) {
+    const handler = (_event: Electron.IpcRendererEvent, id: string, cwd: string) => callback(id, cwd);
+    ipcRenderer.on('pty:cwd', handler);
+    return () => ipcRenderer.removeListener('pty:cwd', handler);
   },
 
   onPtyExit(callback: (id: string, code: number) => void) {

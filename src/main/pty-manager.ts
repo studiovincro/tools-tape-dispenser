@@ -1,7 +1,6 @@
 import * as pty from 'node-pty';
 import { BrowserWindow } from 'electron';
 import { randomUUID } from 'crypto';
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -109,6 +108,20 @@ export class PtyManager {
       if (managed.outputBuffer.length > MAX_BUFFER_SIZE) {
         managed.outputBuffer = managed.outputBuffer.slice(-MAX_BUFFER_SIZE);
       }
+      // Track cwd via OSC 7 escape sequences (emitted by macOS zsh on every cd)
+      // Format: \x1b]7;file://hostname/path\x07  or  \x1b]7;file://hostname/path\x1b\\
+      const osc7Match = data.match(/\x1b\]7;file:\/\/[^/]*(.+?)(?:\x07|\x1b\\)/);
+      if (osc7Match) {
+        try {
+          const newCwd = decodeURIComponent(osc7Match[1]);
+          if (newCwd !== managed.cwd) {
+            managed.cwd = newCwd;
+            if (this.win && !this.win.isDestroyed()) {
+              this.win.webContents.send('pty:cwd', id, newCwd);
+            }
+          }
+        } catch {}
+      }
       if (this.win && !this.win.isDestroyed()) {
         this.win.webContents.send('pty:data', id, data);
       }
@@ -140,16 +153,7 @@ export class PtyManager {
   }
 
   getCwd(id: string): string | null {
-    const session = this.sessions.get(id);
-    if (!session) return null;
-    try {
-      const pid = session.pty.pid;
-      const result = execSync(`lsof -a -p ${pid} -d cwd -Fn`, { encoding: 'utf8', timeout: 2000, shell: '/bin/sh' });
-      const match = result.match(/^n(.+)$/m);
-      return match ? match[1] : session.cwd;
-    } catch {
-      return session.cwd;
-    }
+    return this.sessions.get(id)?.cwd ?? null;
   }
 
   writeToSession(id: string, data: string): void {
