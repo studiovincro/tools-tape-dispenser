@@ -34,8 +34,8 @@ A desktop app for managing multiple Claude Code and terminal sessions in a singl
 
 ```bash
 # Clone the repo
-git clone https://github.com/studiovincro/tools-multi-agent.git
-cd tools-multi-agent
+git clone https://github.com/studiovincro/tools-tape-dispenser.git
+cd tools-tape-dispenser
 
 # Install dependencies and rebuild native modules
 yarn install

@@ -150,7 +150,7 @@ yarn make        # Create distributable (dmg/zip)
 ## Git
 
 - SSH keys are not configured; use `gh` CLI (HTTPS) for push/pull operations
-- Remote URL must be HTTPS format: `https://github.com/studiovincro/tools-multi-agent.git`
+- Remote URL must be HTTPS format: `https://github.com/studiovincro/tools-tape-dispenser.git`
 
 ## Conventions
 

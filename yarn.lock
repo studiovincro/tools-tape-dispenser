@@ -7107,9 +7107,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tools-multiagent@workspace:.":
+"tools-tape-dispenser@workspace:.":
   version: 0.0.0-use.local
-  resolution: "tools-multiagent@workspace:."
+  resolution: "tools-tape-dispenser@workspace:."
   dependencies:
     "@electron-forge/cli": "npm:^7.11.1"
     "@electron-forge/maker-deb": "npm:^7.11.1"
